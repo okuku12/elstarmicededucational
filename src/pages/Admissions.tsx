@@ -90,23 +90,17 @@ const Admissions = () => {
 
         {/* Tuition & Financial Aid */}
         <div className="bg-muted/30 rounded-lg p-8 md:p-12 mb-20">
-          <h2 className="text-3xl font-bold mb-6 text-foreground text-center">Tuition & Financial Aid</h2>
+          <h2 className="text-3xl font-bold mb-6 text-foreground text-center">Tuition </h2>
           <div className="max-w-3xl mx-auto text-center space-y-4 text-muted-foreground">
-            <p>
-              Excellence Academy is committed to making quality education accessible to all qualified students. We offer various financial aid options including scholarships, grants, and payment plans.
-            </p>
-            <p>
-              For detailed tuition information and to apply for financial aid, please contact our admissions office or schedule a meeting with our financial aid counselor.
-            </p>
+            <p>Excellence Academy is committed to making quality education accessible to all qualified students.</p>
+            <p>For detailed tuition information, please contact our admissions office or schedule a meeting with our financial office</p>
           </div>
         </div>
 
         {/* CTA */}
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-6 text-foreground">Ready to Apply?</h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Start your application today or schedule a campus visit to learn more about Excellence Academy.
-          </p>
+          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">Start your application today or schedule a visit to learn more about Elstar Mixed Educational Centre.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="default">
               Start Application
