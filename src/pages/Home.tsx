@@ -14,7 +14,7 @@ const Home = () => {
         </div>
         
         <div className="relative container mx-auto px-4 text-center text-primary-foreground">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">Welcome to Excellence Academ</h1>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">Welcome to Elstar Mixed Educational Centre</h1>
           <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
             Empowering minds, building futures. Where education meets excellence.
           </p>
@@ -34,9 +34,7 @@ const Home = () => {
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12 text-foreground">
-            Why Choose Excellence Academy?
-          </h2>
+          <h2 className="text-4xl font-bold text-center mb-12 text-foreground">Why Choose Elstar Mixed Educational Centre?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[{
             icon: <GraduationCap className="h-10 w-10" />,
