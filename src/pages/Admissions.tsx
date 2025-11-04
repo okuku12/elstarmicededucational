@@ -1,57 +1,38 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Calendar, FileText, UserCheck } from "lucide-react";
-
 const Admissions = () => {
-  const steps = [
-    {
-      icon: <FileText className="h-8 w-8" />,
-      title: "Submit Application",
-      description: "Complete and submit the online application form with required documents.",
-    },
-    {
-      icon: <Calendar className="h-8 w-8" />,
-      title: "Schedule Visit",
-      description: "Arrange a campus tour and meet with our admissions team.",
-    },
-    {
-      icon: <UserCheck className="h-8 w-8" />,
-      title: "Interview & Assessment",
-      description: "Participate in a student interview and academic assessment.",
-    },
-    {
-      icon: <CheckCircle2 className="h-8 w-8" />,
-      title: "Receive Decision",
-      description: "Get your admission decision and enrollment information.",
-    },
-  ];
-
-  const requirements = [
-    "Completed application form",
-    "Birth certificate",
-    "Previous school transcripts",
-    "Immunization records",
-    "Two letters of recommendation",
-    "Recent passport-size photographs",
-  ];
-
-  return (
-    <div className="min-h-screen py-20">
+  const steps = [{
+    icon: <FileText className="h-8 w-8" />,
+    title: "Submit Application",
+    description: "Complete and submit the online application form with required documents."
+  }, {
+    icon: <Calendar className="h-8 w-8" />,
+    title: "Schedule Visit",
+    description: "Arrange a campus tour and meet with our admissions team."
+  }, {
+    icon: <UserCheck className="h-8 w-8" />,
+    title: "Interview & Assessment",
+    description: "Participate in a student interview and academic assessment."
+  }, {
+    icon: <CheckCircle2 className="h-8 w-8" />,
+    title: "Receive Decision",
+    description: "Get your admission decision and enrollment information."
+  }];
+  const requirements = ["Completed application form", "Birth certificate", "Previous school transcripts", "Immunization records", "Two letters of recommendation", "Recent passport-size photographs"];
+  return <div className="min-h-screen py-20">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold mb-6 text-foreground">Admissions</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Join our community of learners. We're excited to welcome your family to Excellence Academy.
-          </p>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">Join our community of learners. We're excited to welcome your family to Elstar Mixed Educational Centre.</p>
         </div>
 
         {/* Admission Process */}
         <div className="mb-20">
           <h2 className="text-3xl font-bold mb-8 text-foreground text-center">Admission Process</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((step, index) => (
-              <Card key={index} className="border-none shadow-lg text-center">
+            {steps.map((step, index) => <Card key={index} className="border-none shadow-lg text-center">
                 <CardHeader>
                   <div className="inline-flex p-4 rounded-full bg-primary/10 text-primary mb-4 w-fit mx-auto">
                     {step.icon}
@@ -62,8 +43,7 @@ const Admissions = () => {
                 <CardContent>
                   <p className="text-muted-foreground">{step.description}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
 
@@ -76,12 +56,10 @@ const Admissions = () => {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {requirements.map((req, index) => (
-                  <li key={index} className="flex items-start gap-3">
+                {requirements.map((req, index) => <li key={index} className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <span className="text-muted-foreground">{req}</span>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
             </CardContent>
           </Card>
@@ -139,8 +117,6 @@ const Admissions = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Admissions;
