@@ -29,10 +29,11 @@ const App = () => (
               <Route path="about" element={<About />} />
               <Route path="academics" element={<Academics />} />
               <Route path="admissions" element={<Admissions />} />
-              <Route path="contact" element={<Contact />} />
-            </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="contact" element={<Contact />} />
+          </Route>
+          <Route path="auth" element={<Auth />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
