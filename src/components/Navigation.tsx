@@ -1,8 +1,29 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Menu, X, GraduationCap, LogOut, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 const Navigation = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+    navigate("/auth");
+  };
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navItems = [{
@@ -38,9 +59,25 @@ const Navigation = () => {
             {navItems.map(item => <Link key={item.path} to={item.path} className={`text-sm font-medium transition-colors hover:text-primary ${isActive(item.path) ? "text-primary" : "text-muted-foreground"}`}>
                 {item.label}
               </Link>)}
-            <Button variant="default" size="sm">
-              Apply Now
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="default" size="sm" onClick={() => navigate("/auth")}>
+                Sign In
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -54,9 +91,16 @@ const Navigation = () => {
             {navItems.map(item => <Link key={item.path} to={item.path} className={`block py-2 text-sm font-medium transition-colors hover:text-primary ${isActive(item.path) ? "text-primary" : "text-muted-foreground"}`} onClick={() => setIsOpen(false)}>
                 {item.label}
               </Link>)}
-            <Button variant="default" className="w-full">
-              Apply Now
-            </Button>
+            {user ? (
+              <Button variant="outline" className="w-full" onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            ) : (
+              <Button variant="default" className="w-full" onClick={() => navigate("/auth")}>
+                Sign In
+              </Button>
+            )}
           </div>}
       </div>
     </nav>;
