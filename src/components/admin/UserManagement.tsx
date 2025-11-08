@@ -3,11 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { UserCog, Shield, GraduationCap, User } from "lucide-react";
+import { UserCog, Shield, GraduationCap, User, Users } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -29,6 +30,9 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
+  const [bulkRole, setBulkRole] = useState<string>("");
 
   const fetchData = async () => {
     try {
@@ -114,6 +118,68 @@ const UserManagement = () => {
     }
   };
 
+  const handleBulkAssign = async () => {
+    if (selectedUsers.size === 0 || !bulkRole) {
+      toast.error("Please select users and a role");
+      return;
+    }
+
+    try {
+      const usersToAssign = Array.from(selectedUsers);
+      
+      // Filter out users who already have this role
+      const usersNeedingRole = usersToAssign.filter((userId) => {
+        const existingRole = userRoles.find(
+          (role) => role.user_id === userId && role.role === bulkRole
+        );
+        return !existingRole;
+      });
+
+      if (usersNeedingRole.length === 0) {
+        toast.info("All selected users already have this role");
+        setIsBulkDialogOpen(false);
+        return;
+      }
+
+      // Prepare bulk insert data
+      const roleAssignments = usersNeedingRole.map((userId) => ({
+        user_id: userId,
+        role: bulkRole as "admin" | "teacher" | "student",
+      }));
+
+      const { error } = await supabase.from("user_roles").insert(roleAssignments);
+
+      if (error) throw error;
+
+      toast.success(
+        `Successfully assigned ${bulkRole} role to ${usersNeedingRole.length} user(s)`
+      );
+      setIsBulkDialogOpen(false);
+      setSelectedUsers(new Set());
+      setBulkRole("");
+    } catch (error: any) {
+      toast.error("Failed to assign roles: " + error.message);
+    }
+  };
+
+  const toggleUserSelection = (userId: string) => {
+    const newSelection = new Set(selectedUsers);
+    if (newSelection.has(userId)) {
+      newSelection.delete(userId);
+    } else {
+      newSelection.add(userId);
+    }
+    setSelectedUsers(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(users.map((u) => u.id)));
+    }
+  };
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "admin":
@@ -157,12 +223,94 @@ const UserManagement = () => {
             Assign and manage user roles for access control
           </p>
         </div>
+        {selectedUsers.size > 0 && (
+          <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Assign ({selectedUsers.size})
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Bulk Assign Role</DialogTitle>
+                <DialogDescription>
+                  Assign a role to {selectedUsers.size} selected user(s)
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Role</label>
+                  <Select value={bulkRole} onValueChange={setBulkRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a role to assign" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Admin - Full system access
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="teacher">
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="h-4 w-4" />
+                          Teacher - Manage classes and students
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="student">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Student - Access to assignments and grades
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="bg-muted p-3 rounded-md">
+                  <p className="text-sm font-medium mb-2">Selected Users:</p>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {users
+                      .filter((u) => selectedUsers.has(u.id))
+                      .map((user) => (
+                        <div key={user.id} className="text-sm text-muted-foreground">
+                          • {user.full_name} ({user.email})
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button onClick={handleBulkAssign} className="flex-1">
+                    Assign Role to All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedUsers(new Set());
+                      setIsBulkDialogOpen(false);
+                    }}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedUsers.size === users.length && users.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Current Roles</TableHead>
@@ -177,6 +325,12 @@ const UserManagement = () => {
 
                 return (
                   <TableRow key={user.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedUsers.has(user.id)}
+                        onCheckedChange={() => toggleUserSelection(user.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{user.full_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
