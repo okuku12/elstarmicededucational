@@ -4,12 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog } from "lucide-react";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
 import ClassesManagement from "@/components/admin/ClassesManagement";
 import GalleryManagement from "@/components/admin/GalleryManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
+import UserManagement from "@/components/admin/UserManagement";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -72,8 +73,12 @@ const AdminDashboard = () => {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="students" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="users" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <UserCog className="h-4 w-4" />
+            <span className="hidden sm:inline">Users</span>
+          </TabsTrigger>
           <TabsTrigger value="students" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Students</span>
@@ -95,6 +100,10 @@ const AdminDashboard = () => {
             <span className="hidden sm:inline">Assignments</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="users">
+          <UserManagement />
+        </TabsContent>
 
         <TabsContent value="students">
           <StudentsManagement />
