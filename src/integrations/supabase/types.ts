@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      admission_applications: {
+        Row: {
+          additional_info: string | null
+          address: string
+          created_at: string | null
+          date_of_birth: string
+          gender: string
+          grade_applying_for: string
+          id: string
+          parent_email: string
+          parent_name: string
+          parent_phone: string
+          previous_school: string | null
+          status: string | null
+          student_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          address: string
+          created_at?: string | null
+          date_of_birth: string
+          gender: string
+          grade_applying_for: string
+          id?: string
+          parent_email: string
+          parent_name: string
+          parent_phone: string
+          previous_school?: string | null
+          status?: string | null
+          student_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          address?: string
+          created_at?: string | null
+          date_of_birth?: string
+          gender?: string
+          grade_applying_for?: string
+          id?: string
+          parent_email?: string
+          parent_name?: string
+          parent_phone?: string
+          previous_school?: string | null
+          status?: string | null
+          student_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           content: string
@@ -276,6 +327,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contact_submissions: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          message: string
+          name: string
+          status: string | null
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          message: string
+          name: string
+          status?: string | null
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          status?: string | null
+          subject?: string
+        }
+        Relationships: []
       }
       events: {
         Row: {
@@ -597,6 +678,42 @@ export type Database = {
           teacher_id?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          avatar_url: string | null
+          content: string
+          created_at: string | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          rating: number | null
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          rating?: number | null
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          rating?: number | null
+          role?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

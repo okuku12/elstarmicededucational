@@ -9,6 +9,9 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Academics from "./pages/Academics";
 import Admissions from "./pages/Admissions";
+import AdmissionsForm from "./pages/AdmissionsForm";
+import Gallery from "./pages/Gallery";
+import NewsEvents from "./pages/NewsEvents";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -31,6 +34,9 @@ const App = () => (
               <Route path="about" element={<About />} />
               <Route path="academics" element={<Academics />} />
               <Route path="admissions" element={<Admissions />} />
+              <Route path="admissions/apply" element={<AdmissionsForm />} />
+              <Route path="gallery" element={<Gallery />} />
+              <Route path="news-events" element={<NewsEvents />} />
               <Route path="contact" element={<Contact />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

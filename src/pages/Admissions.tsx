@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Calendar, FileText, UserCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 const Admissions = () => {
   const steps = [{
     icon: <FileText className="h-8 w-8" />,
@@ -102,11 +103,11 @@ const Admissions = () => {
           <h2 className="text-3xl font-bold mb-6 text-foreground">Ready to Apply?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">Start your application today or schedule a visit to learn more about Elstar Mixed Educational Centre.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="default">
-              Start Application
+            <Button size="lg" variant="default" asChild>
+              <Link to="/admissions/apply">Start Application</Link>
             </Button>
-            <Button size="lg" variant="outline">
-              Schedule a Visit
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/contact">Schedule a Visit</Link>
             </Button>
           </div>
         </div>
