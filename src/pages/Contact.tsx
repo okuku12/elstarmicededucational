@@ -7,44 +7,44 @@ import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
-    message: "",
+    message: ""
   });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
-      const { error } = await supabase
-        .from("contact_submissions")
-        .insert([{
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-        }]);
-
+      const {
+        error
+      } = await supabase.from("contact_submissions").insert([{
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message
+      }]);
       if (error) throw error;
-
       toast.success("Thank you! We'll get back to you soon.");
-      setFormData({ name: "", email: "", subject: "", message: "" });
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: ""
+      });
     } catch (error) {
       console.error("Error submitting contact form:", error);
       toast.error("Failed to send message. Please try again.");
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
-
-  return (
-    <div className="min-h-screen py-20">
+  return <div className="min-h-screen py-20">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
@@ -81,8 +81,9 @@ const Contact = () => {
                 <CardTitle>Phone</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  Main Office: +1 (555) 123-4567<br />
+                <p className="text-muted-foreground">Main Office: +1 (555) 123-4567
+Admissions: +1 (555) 123-4568
+                <br />
                   Admissions: +1 (555) 123-4568<br />
                   Fax: +1 (555) 123-4569
                 </p>
@@ -97,8 +98,9 @@ const Contact = () => {
                 <CardTitle>Email</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  General: info@excellenceacademy.edu<br />
+                <p className="text-muted-foreground">General: elstermixed@gmail.com
+Admissions: admissions@excellenceacademy.edu
+Support: support@excellenceacademy.edu<br />
                   Admissions: admissions@excellenceacademy.edu<br />
                   Support: support@excellenceacademy.edu
                 </p>
@@ -134,50 +136,20 @@ const Contact = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        placeholder="John Doe"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                      />
+                      <Input id="name" name="name" placeholder="John Doe" value={formData.name} onChange={handleChange} required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="john@example.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
+                      <Input id="email" name="email" type="email" placeholder="john@example.com" value={formData.email} onChange={handleChange} required />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subject">Subject</Label>
-                    <Input
-                      id="subject"
-                      name="subject"
-                      placeholder="What is this regarding?"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="subject" name="subject" placeholder="What is this regarding?" value={formData.subject} onChange={handleChange} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="message">Message</Label>
-                    <Textarea
-                      id="message"
-                      name="message"
-                      placeholder="Tell us more about your inquiry..."
-                      rows={6}
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Textarea id="message" name="message" placeholder="Tell us more about your inquiry..." rows={6} value={formData.message} onChange={handleChange} required />
                   </div>
                   <Button type="submit" size="lg" className="w-full">
                     Send Message
@@ -188,8 +160,6 @@ const Contact = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Contact;
