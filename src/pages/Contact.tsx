@@ -76,7 +76,8 @@ const Contact = () => {
                 <CardTitle>Address</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">P.O.BOX 54145-0100, Nairobi kenya<br />
+                <p className="text-muted-foreground">P.O.Box 54145-0100, Nairobi kenya
+                <br />
                   City, State 12345<br />
                   United States
                 </p>
