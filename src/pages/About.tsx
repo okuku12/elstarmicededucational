@@ -1,9 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Target, Eye, Heart } from "lucide-react";
-
 const About = () => {
-  return (
-    <div className="min-h-screen py-20">
+  return <div className="min-h-screen py-20">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
@@ -88,9 +86,7 @@ const About = () => {
         <div>
           <h2 className="text-3xl font-bold mb-8 text-foreground text-center">Our History</h2>
           <div className="max-w-3xl mx-auto space-y-6 text-muted-foreground">
-            <p>
-              Excellence Academy was founded in 2000 with a vision to provide quality education that nurtures the whole child. Starting with just 100 students and 10 teachers, our school has grown into a thriving community of over 1,000 students and 50+ dedicated educators.
-            </p>
+            <p>Elstar Mixed Education Centre was founded in 2018 with a vision to provide quality education that nurtures not just academic excellence, but also strong character, leadership skills, and a sense of social responsibility.</p>
             <p>
               Over the years, we have expanded our facilities to include modern science laboratories, computer labs, a well-stocked library, sports facilities, and art studios. Our curriculum has evolved to incorporate the latest educational research and technology while maintaining a strong foundation in core academic subjects.
             </p>
@@ -100,8 +96,6 @@ const About = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default About;
