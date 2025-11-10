@@ -4,13 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home } from "lucide-react";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
 import ClassesManagement from "@/components/admin/ClassesManagement";
 import GalleryManagement from "@/components/admin/GalleryManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import UserManagement from "@/components/admin/UserManagement";
+import HeroSectionManagement from "@/components/admin/HeroSectionManagement";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -73,8 +74,12 @@ const AdminDashboard = () => {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+      <Tabs defaultValue="hero" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="hero" className="flex items-center gap-2">
+            <Home className="h-4 w-4" />
+            <span className="hidden sm:inline">Hero</span>
+          </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <UserCog className="h-4 w-4" />
             <span className="hidden sm:inline">Users</span>
@@ -100,6 +105,10 @@ const AdminDashboard = () => {
             <span className="hidden sm:inline">Assignments</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="hero">
+          <HeroSectionManagement />
+        </TabsContent>
 
         <TabsContent value="users">
           <UserManagement />

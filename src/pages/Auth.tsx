@@ -51,8 +51,24 @@ const Auth = () => {
         return;
       }
 
+      // Check user role and redirect accordingly
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+        .maybeSingle();
+
       toast.success("Welcome back!");
-      navigate("/");
+      
+      if (roleData?.role === "admin") {
+        navigate("/admin");
+      } else if (roleData?.role === "teacher") {
+        navigate("/teacher");
+      } else if (roleData?.role === "student") {
+        navigate("/student");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       toast.error("An unexpected error occurred");
     } finally {
