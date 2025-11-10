@@ -107,7 +107,7 @@ const Contact = () => {
                 <CardTitle>Email</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">General: elstermixed@gmail.com Admissions: <br />
+                <p className="text-muted-foreground">General: elstermixed@gmail.com<br />
                   Admissions: admissions@excellenceacademy.edu<br />
                   Support: support@excellenceacademy.edu
                 </p>
