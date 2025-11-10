@@ -48,7 +48,7 @@ const Contact = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold mb-6 text-foreground">Contact Us</h1>
+          <h1 className="text-5xl font-bold mb-6 text-foreground">Get In Touch</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">Have a question about admissions, academics, or campus life? We'd love to hear from you. Fill out the form and our team will respond within 24 hours.</p>
         </div>
 
