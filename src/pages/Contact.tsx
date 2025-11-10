@@ -58,16 +58,9 @@ const Contact = () => {
         <div className="mb-12">
           <Card className="border-none shadow-lg overflow-hidden">
             <div className="aspect-video w-full">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.8175885098765!2d36.8219!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMTcnMzEuNiJTIDM2wrA0OScxOC44IkU!5e0!3m2!1sen!2ske!4v1234567890!5m2!1sen!2ske"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="School Location Map"
-              />
+              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.8175885098765!2d36.8219!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMTcnMzEuNiJTIDM2wrA0OScxOC44IkU!5e0!3m2!1sen!2ske!4v1234567890!5m2!1sen!2ske" width="100%" height="100%" style={{
+              border: 0
+            }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="School Location Map" />
             </div>
           </Card>
         </div>
@@ -83,8 +76,7 @@ const Contact = () => {
                 <CardTitle>Address</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  123 Education Street<br />
+                <p className="text-muted-foreground">P.O.BOX 54145-0100, Nairobi kenya<br />
                   City, State 12345<br />
                   United States
                 </p>
@@ -99,8 +91,10 @@ const Contact = () => {
                 <CardTitle>Phone</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Main Office: +1 (555) 123-4567
-Admissions: +1 (555) 123-4568
+                <p className="text-muted-foreground">Main Office: +254 700901266
+ Admissions: 
+Admissions: 
+
                 <br />
                   Admissions: +1 (555) 123-4568<br />
                   Fax: +1 (555) 123-4569
