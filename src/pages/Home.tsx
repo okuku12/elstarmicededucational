@@ -145,9 +145,7 @@ const Home = () => {
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">Ready to Join Us?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            Start your journey toward academic excellence. Apply now and become part of our thriving community.
-          </p>
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">Take the first step towards a bright future. Our admissions team is ready to guide you through the enrollment process.</p>
           <Button variant="secondary" size="lg" asChild>
             <Link to="/admissions">
               Start Application <ArrowRight className="ml-2 h-5 w-5" />
