@@ -91,10 +91,7 @@ const Contact = () => {
                 <CardTitle>Phone</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Main Office: +254 700901266
- Admissions: 
-Admissions: 
-
+                <p className="text-muted-foreground">Main Office: +254 700901266 
                 <br />
                   Admissions: +1 (555) 123-4568<br />
                   Fax: +1 (555) 123-4569
