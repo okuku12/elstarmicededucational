@@ -66,17 +66,14 @@ const About = () => {
             <p>
               Dear Students, Parents, and Community Members,
             </p>
-            <p>
-              It is with great pride and enthusiasm that I welcome you to Excellence Academy. Our school has been a cornerstone of educational excellence in our community for over two decades, and we continue to evolve and adapt to meet the needs of our students in the 21st century.
-            </p>
-            <p>
-              At Excellence Academy, we believe that every student has unique talents and potential. Our dedicated faculty and staff work tirelessly to create an environment where students can discover their passions, develop their skills, and achieve their goals. We offer a rigorous academic curriculum combined with extensive extracurricular activities to ensure well-rounded development.
-            </p>
-            <p>
-              We invite you to explore our website to learn more about our programs, facilities, and the Excellence Academy difference. We look forward to partnering with you on your educational journey.
-            </p>
-            <p className="font-semibold text-foreground">
-              Dr. Sarah Johnson<br />
+            <p>It is with great pride and enthusiasm that I welcome you to Excellence Academy. Our school has been a cornerstone of educational excellence in our community for over two decades, and we continue to evolve and adapt to meet the needs of our students in the 21st centu</p>
+            <p>We understand that education is not just about passing examinations, but about preparing young people for life. That's why we emphasize values such as integrity, respect, and responsibility alongside academic achievement.</p>
+            <p>I invite you to join our community and experience the Elstar Mix Secondary School difference. Together, we can help your child reach their full potential</p>
+            <p className="font-semibold text-foreground">I invite you to join our community and experience the Elstar Mix Secondary School difference. Together, we can help your child reach their full potential.
+
+Mr. Joel Onyango
+
+Director, Elstar Mixed Education Centre<br />
               Principal, Excellence Academy
             </p>
           </div>
