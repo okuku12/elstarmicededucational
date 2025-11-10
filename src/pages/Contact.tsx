@@ -91,6 +91,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">Main Office: +254 700901266
+Admissions: +254 754323024
                 <br />
                   Admissions: +1 (555) 123-4568<br />
                   Fax: +1 (555) 123-4569
@@ -106,7 +107,8 @@ const Contact = () => {
                 <CardTitle>Email</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">General: elstermixed@gmail.com<br />
+                <p className="text-muted-foreground">General: elstermixed@gmail.com
+                <br />
                   Admissions: admissions@excellenceacademy.edu<br />
                   Support: support@excellenceacademy.edu
                 </p>
