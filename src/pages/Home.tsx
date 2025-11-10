@@ -36,9 +36,7 @@ const Home = () => {
         
         <div className="relative container mx-auto px-4 text-center text-primary-foreground">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">Welcome to Elstar Mixed Educational Centre</h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            Empowering minds, building futures. Where education meets excellence.
-          </p>
+          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">Education Is Light </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="hero" size="lg" asChild>
               <Link to="/admissions">
