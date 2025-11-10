@@ -110,9 +110,7 @@ Admissions: 
                 <CardTitle>Email</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">General: elstermixed@gmail.com
-Admissions: admissions@excellenceacademy.edu
-Support: support@excellenceacademy.edu<br />
+                <p className="text-muted-foreground">General: elstermixed@gmail.com Admissions: <br />
                   Admissions: admissions@excellenceacademy.edu<br />
                   Support: support@excellenceacademy.edu
                 </p>
