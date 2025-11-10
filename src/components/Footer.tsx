@@ -10,9 +10,7 @@ const Footer = () => {
               <GraduationCap className="h-6 w-6" />
               <span className="font-bold text-lg">Elstar mixed Educational Centre</span>
             </div>
-            <p className="text-sm text-primary-foreground/80">
-              Empowering minds, building futures. Excellence in education since 2000.
-            </p>
+            <p className="text-sm text-primary-foreground/80">A school committed to academic excellence, character development, and holistic education.</p>
           </div>
 
           {/* Quick Links */}
