@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { gallerySchema } from "@/lib/validations";
 
 interface GalleryItem {
   id: string;
@@ -59,23 +60,44 @@ const GalleryManagement = () => {
   }, []);
 
   const handleSave = async (formData: FormData) => {
-    try {
-      const data = {
-        title: formData.get("title") as string,
-        description: formData.get("description") as string || null,
-        image_url: formData.get("image_url") as string,
-        category: formData.get("category") as string,
-        is_featured: formData.get("is_featured") === "on",
-        display_order: parseInt(formData.get("display_order") as string) || 0,
-        created_by: user?.id,
-      };
+    const rawData = {
+      title: (formData.get("title") as string || "").trim(),
+      description: (formData.get("description") as string || "").trim(),
+      image_url: (formData.get("image_url") as string || "").trim(),
+      category: (formData.get("category") as string || "").trim(),
+      is_featured: formData.get("is_featured") === "on",
+      display_order: parseInt(formData.get("display_order") as string) || 0,
+    };
 
+    // Validate
+    const result = gallerySchema.safeParse(rawData);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
+      return;
+    }
+
+    try {
       if (editingItem) {
-        const { error } = await supabase.from("gallery").update(data).eq("id", editingItem.id);
+        const { error } = await supabase.from("gallery").update({
+          title: result.data.title,
+          description: result.data.description || null,
+          image_url: result.data.image_url,
+          category: result.data.category,
+          display_order: result.data.display_order,
+          is_featured: result.data.is_featured,
+        }).eq("id", editingItem.id);
         if (error) throw error;
         toast.success("Gallery item updated successfully");
       } else {
-        const { error } = await supabase.from("gallery").insert(data);
+        const { error } = await supabase.from("gallery").insert({
+          title: result.data.title,
+          description: result.data.description || null,
+          image_url: result.data.image_url,
+          category: result.data.category,
+          display_order: result.data.display_order,
+          is_featured: result.data.is_featured,
+          created_by: user?.id!,
+        });
         if (error) throw error;
         toast.success("Gallery item created successfully");
       }
@@ -120,24 +142,24 @@ const GalleryManagement = () => {
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
               <div>
-                <Label>Title</Label>
-                <Input name="title" required />
+                <Label>Title *</Label>
+                <Input name="title" required maxLength={200} />
               </div>
               <div>
                 <Label>Description</Label>
-                <Textarea name="description" />
+                <Textarea name="description" maxLength={500} />
               </div>
               <div>
-                <Label>Image URL</Label>
-                <Input name="image_url" type="url" required />
+                <Label>Image URL *</Label>
+                <Input name="image_url" type="url" required maxLength={500} placeholder="https://example.com/image.jpg" />
               </div>
               <div>
-                <Label>Category</Label>
-                <Input name="category" defaultValue="general" required />
+                <Label>Category *</Label>
+                <Input name="category" defaultValue="general" required maxLength={50} />
               </div>
               <div>
                 <Label>Display Order</Label>
-                <Input name="display_order" type="number" defaultValue="0" />
+                <Input name="display_order" type="number" defaultValue="0" min="0" max="9999" />
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" name="is_featured" id="is_featured" />
@@ -169,24 +191,24 @@ const GalleryManagement = () => {
                       </DialogHeader>
                       <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
                         <div>
-                          <Label>Title</Label>
-                          <Input name="title" defaultValue={item.title} required />
+                          <Label>Title *</Label>
+                          <Input name="title" defaultValue={item.title} required maxLength={200} />
                         </div>
                         <div>
                           <Label>Description</Label>
-                          <Textarea name="description" defaultValue={item.description || ""} />
+                          <Textarea name="description" defaultValue={item.description || ""} maxLength={500} />
                         </div>
                         <div>
-                          <Label>Image URL</Label>
-                          <Input name="image_url" type="url" defaultValue={item.image_url} required />
+                          <Label>Image URL *</Label>
+                          <Input name="image_url" type="url" defaultValue={item.image_url} required maxLength={500} />
                         </div>
                         <div>
-                          <Label>Category</Label>
-                          <Input name="category" defaultValue={item.category} required />
+                          <Label>Category *</Label>
+                          <Input name="category" defaultValue={item.category} required maxLength={50} />
                         </div>
                         <div>
                           <Label>Display Order</Label>
-                          <Input name="display_order" type="number" defaultValue={item.display_order} />
+                          <Input name="display_order" type="number" defaultValue={item.display_order} min="0" max="9999" />
                         </div>
                         <div className="flex items-center gap-2">
                           <input type="checkbox" name="is_featured" id={`is_featured_${item.id}`} defaultChecked={item.is_featured} />

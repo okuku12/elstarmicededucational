@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { assignmentSchema } from "@/lib/validations";
 
 interface Assignment {
   id: string;
@@ -36,6 +37,7 @@ const AssignmentsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedClassSubject, setSelectedClassSubject] = useState<string>("");
 
   const fetchData = async () => {
     try {
@@ -72,13 +74,28 @@ const AssignmentsManagement = () => {
   }, []);
 
   const handleSave = async (formData: FormData) => {
+    const rawData = {
+      title: (formData.get("title") as string || "").trim(),
+      description: (formData.get("description") as string || "").trim(),
+      class_subject_id: selectedClassSubject || formData.get("class_subject_id") as string || "",
+      due_date: formData.get("due_date") as string || "",
+      max_marks: parseInt(formData.get("max_marks") as string) || 100,
+    };
+
+    // Validate
+    const result = assignmentSchema.safeParse(rawData);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
+      return;
+    }
+
     try {
       const data = {
-        title: formData.get("title") as string,
-        description: formData.get("description") as string || null,
-        class_subject_id: formData.get("class_subject_id") as string,
-        due_date: formData.get("due_date") as string || null,
-        max_marks: parseInt(formData.get("max_marks") as string) || 100,
+        title: result.data.title,
+        description: result.data.description || null,
+        class_subject_id: result.data.class_subject_id,
+        due_date: result.data.due_date || null,
+        max_marks: result.data.max_marks,
         created_by: user?.id,
       };
 
@@ -94,6 +111,7 @@ const AssignmentsManagement = () => {
 
       setIsDialogOpen(false);
       setEditingAssignment(null);
+      setSelectedClassSubject("");
     } catch (error: any) {
       toast.error("Failed to save: " + error.message);
     }
@@ -111,6 +129,18 @@ const AssignmentsManagement = () => {
     }
   };
 
+  const openEditDialog = (assignment: Assignment) => {
+    setEditingAssignment(assignment);
+    setSelectedClassSubject(assignment.class_subject_id);
+    setIsDialogOpen(true);
+  };
+
+  const openCreateDialog = () => {
+    setEditingAssignment(null);
+    setSelectedClassSubject("");
+    setIsDialogOpen(true);
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
   }
@@ -119,9 +149,9 @@ const AssignmentsManagement = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Assignments Management</CardTitle>
-        <Dialog open={isDialogOpen && !editingAssignment} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingAssignment(null); }}>
+        <Dialog open={isDialogOpen && !editingAssignment} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingAssignment(null); setSelectedClassSubject(""); } }}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditingAssignment(null); setIsDialogOpen(true); }}>
+            <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               Add Assignment
             </Button>
@@ -132,16 +162,16 @@ const AssignmentsManagement = () => {
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
               <div>
-                <Label>Title</Label>
-                <Input name="title" required />
+                <Label>Title *</Label>
+                <Input name="title" required maxLength={200} />
               </div>
               <div>
                 <Label>Description</Label>
-                <Textarea name="description" />
+                <Textarea name="description" maxLength={2000} />
               </div>
               <div>
-                <Label>Class & Subject</Label>
-                <Select name="class_subject_id" required>
+                <Label>Class & Subject *</Label>
+                <Select value={selectedClassSubject} onValueChange={setSelectedClassSubject} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select class and subject" />
                   </SelectTrigger>
@@ -153,6 +183,7 @@ const AssignmentsManagement = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <input type="hidden" name="class_subject_id" value={selectedClassSubject} />
               </div>
               <div>
                 <Label>Due Date</Label>
@@ -160,7 +191,7 @@ const AssignmentsManagement = () => {
               </div>
               <div>
                 <Label>Max Marks</Label>
-                <Input name="max_marks" type="number" defaultValue="100" />
+                <Input name="max_marks" type="number" defaultValue="100" min="1" max="1000" />
               </div>
               <Button type="submit" className="w-full">Create Assignment</Button>
             </form>
@@ -197,9 +228,9 @@ const AssignmentsManagement = () => {
                     <TableCell>{assignment.max_marks}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Dialog open={isDialogOpen && editingAssignment?.id === assignment.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingAssignment(null); }}>
+                        <Dialog open={isDialogOpen && editingAssignment?.id === assignment.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingAssignment(null); setSelectedClassSubject(""); } }}>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => setEditingAssignment(assignment)}>
+                            <Button variant="outline" size="sm" onClick={() => openEditDialog(assignment)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
@@ -209,16 +240,16 @@ const AssignmentsManagement = () => {
                             </DialogHeader>
                             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
                               <div>
-                                <Label>Title</Label>
-                                <Input name="title" defaultValue={assignment.title} required />
+                                <Label>Title *</Label>
+                                <Input name="title" defaultValue={assignment.title} required maxLength={200} />
                               </div>
                               <div>
                                 <Label>Description</Label>
-                                <Textarea name="description" defaultValue={assignment.description || ""} />
+                                <Textarea name="description" defaultValue={assignment.description || ""} maxLength={2000} />
                               </div>
                               <div>
-                                <Label>Class & Subject</Label>
-                                <Select name="class_subject_id" defaultValue={assignment.class_subject_id}>
+                                <Label>Class & Subject *</Label>
+                                <Select value={selectedClassSubject} onValueChange={setSelectedClassSubject}>
                                   <SelectTrigger>
                                     <SelectValue />
                                   </SelectTrigger>
@@ -230,6 +261,7 @@ const AssignmentsManagement = () => {
                                     ))}
                                   </SelectContent>
                                 </Select>
+                                <input type="hidden" name="class_subject_id" value={selectedClassSubject} />
                               </div>
                               <div>
                                 <Label>Due Date</Label>
@@ -237,7 +269,7 @@ const AssignmentsManagement = () => {
                               </div>
                               <div>
                                 <Label>Max Marks</Label>
-                                <Input name="max_marks" type="number" defaultValue={assignment.max_marks} />
+                                <Input name="max_marks" type="number" defaultValue={assignment.max_marks} min="1" max="1000" />
                               </div>
                               <Button type="submit" className="w-full">Save Changes</Button>
                             </form>
