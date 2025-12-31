@@ -7,23 +7,43 @@ import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { contactSchema, ContactFormData } from "@/lib/validations";
+
 const Contact = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     email: "",
     subject: "",
     message: ""
   });
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    // Validate form data
+    const result = contactSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof ContactFormData, string>> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as keyof ContactFormData] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error(result.error.errors[0].message);
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const {
-        error
-      } = await supabase.from("contact_submissions").insert([{
-        name: formData.name,
-        email: formData.email,
-        subject: formData.subject,
-        message: formData.message
+      const { error } = await supabase.from("contact_submissions").insert([{
+        name: result.data.name,
+        email: result.data.email,
+        subject: result.data.subject,
+        message: result.data.message
       }]);
       if (error) throw error;
       toast.success("Thank you! We'll get back to you soon.");
@@ -36,15 +56,25 @@ const Contact = () => {
     } catch (error) {
       console.error("Error submitting contact form:", error);
       toast.error("Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    // Clear error when user starts typing
+    if (errors[name as keyof ContactFormData]) {
+      setErrors({ ...errors, [name]: undefined });
+    }
   };
-  return <div className="min-h-screen py-20">
+
+  return (
+    <div className="min-h-screen py-20">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
@@ -57,8 +87,8 @@ const Contact = () => {
           <Card className="border-none shadow-lg overflow-hidden">
             <div className="aspect-video w-full">
               <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.8175885098765!2d36.8219!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMTcnMzEuNiJTIDM2wrA0OScxOC44IkU!5e0!3m2!1sen!2ske!4v1234567890!5m2!1sen!2ske" width="100%" height="100%" style={{
-              border: 0
-            }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="School Location Map" />
+                border: 0
+              }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="School Location Map" />
             </div>
           </Card>
         </div>
@@ -75,7 +105,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">P.O.Box 54145-0100, Nairobi kenya
-                <br />
+                  <br />
                   City, State 12345<br />
                   United States
                 </p>
@@ -91,8 +121,8 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">Main Office: +254 700901266
-Admissions: +254 754323024
-                <br />
+                  Admissions: +254 754323024
+                  <br />
                   Admissions: +1 (555) 123-4568<br />
                   Fax: +1 (555) 123-4569
                 </p>
@@ -108,7 +138,7 @@ Admissions: +254 754323024
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">General: elstermixed@gmail.com
-                <br />
+                  <br />
                   Admissions: admissions@excellenceacademy.edu<br />
                   Support: support@excellenceacademy.edu
                 </p>
@@ -124,8 +154,8 @@ Admissions: +254 754323024
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">Monday - Friday: 8:00 AM - 4:00 PM
-Saturday: 9:00 AM - 12:00 PM
-Sunday: Closed<br />
+                  Saturday: 9:00 AM - 12:00 PM
+                  Sunday: Closed<br />
                   Saturday: 9:00 AM - 12:00 PM<br />
                   Sunday: Closed
                 </p>
@@ -145,23 +175,68 @@ Sunday: Closed<br />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" name="name" placeholder="John Doe" value={formData.name} onChange={handleChange} required />
+                      <Input 
+                        id="name" 
+                        name="name" 
+                        placeholder="John Doe" 
+                        value={formData.name} 
+                        onChange={handleChange} 
+                        maxLength={100}
+                        className={errors.name ? "border-destructive" : ""}
+                        required 
+                      />
+                      {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" name="email" type="email" placeholder="john@example.com" value={formData.email} onChange={handleChange} required />
+                      <Input 
+                        id="email" 
+                        name="email" 
+                        type="email" 
+                        placeholder="john@example.com" 
+                        value={formData.email} 
+                        onChange={handleChange} 
+                        maxLength={255}
+                        className={errors.email ? "border-destructive" : ""}
+                        required 
+                      />
+                      {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subject">Subject</Label>
-                    <Input id="subject" name="subject" placeholder="What is this regarding?" value={formData.subject} onChange={handleChange} required />
+                    <Input 
+                      id="subject" 
+                      name="subject" 
+                      placeholder="What is this regarding?" 
+                      value={formData.subject} 
+                      onChange={handleChange} 
+                      maxLength={200}
+                      className={errors.subject ? "border-destructive" : ""}
+                      required 
+                    />
+                    {errors.subject && <p className="text-sm text-destructive">{errors.subject}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="message">Message</Label>
-                    <Textarea id="message" name="message" placeholder="Tell us more about your inquiry..." rows={6} value={formData.message} onChange={handleChange} required />
+                    <Textarea 
+                      id="message" 
+                      name="message" 
+                      placeholder="Tell us more about your inquiry..." 
+                      rows={6} 
+                      value={formData.message} 
+                      onChange={handleChange} 
+                      maxLength={2000}
+                      className={errors.message ? "border-destructive" : ""}
+                      required 
+                    />
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      {errors.message && <p className="text-destructive">{errors.message}</p>}
+                      <span className="ml-auto">{formData.message.length}/2000</span>
+                    </div>
                   </div>
-                  <Button type="submit" size="lg" className="w-full">
-                    Send Message
+                  <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               </CardContent>
@@ -169,6 +244,8 @@ Sunday: Closed<br />
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Contact;
