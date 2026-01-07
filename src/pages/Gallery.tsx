@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { gallerySchema } from "@/lib/validations";
+import { Pencil, Plus, Trash2, Upload, Loader2 } from "lucide-react";
 
 interface GalleryItem {
   id: string;
@@ -34,6 +33,10 @@ const Gallery = () => {
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchGallery();
@@ -78,53 +81,117 @@ const Gallery = () => {
     }
   };
 
-  const handleSave = async (formData: FormData) => {
-    const rawData = {
-      title: (formData.get("title") as string || "").trim(),
-      description: (formData.get("description") as string || "").trim(),
-      image_url: (formData.get("image_url") as string || "").trim(),
-      category: (formData.get("category") as string || "").trim(),
-      is_featured: formData.get("is_featured") === "on",
-      display_order: parseInt(formData.get("display_order") as string) || 0,
-    };
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const result = gallerySchema.safeParse(rawData);
-    if (!result.success) {
-      toast.error(result.error.errors[0].message);
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
       return;
     }
 
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("gallery-images")
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("gallery-images")
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  const handleSave = async (formData: FormData) => {
+    const title = (formData.get("title") as string || "").trim();
+    const description = (formData.get("description") as string || "").trim();
+    const category = (formData.get("category") as string || "").trim();
+    const is_featured = formData.get("is_featured") === "on";
+    const display_order = parseInt(formData.get("display_order") as string) || 0;
+
+    if (!title) {
+      toast.error("Title is required");
+      return;
+    }
+
+    if (title.length > 200) {
+      toast.error("Title must be less than 200 characters");
+      return;
+    }
+
+    if (!category) {
+      toast.error("Category is required");
+      return;
+    }
+
+    // For new images, require a file
+    if (!editingItem && !selectedFile) {
+      toast.error("Please select an image to upload");
+      return;
+    }
+
+    setUploading(true);
+
     try {
+      let image_url = editingItem?.image_url || "";
+
+      // Upload new image if selected
+      if (selectedFile) {
+        image_url = await uploadImage(selectedFile);
+      }
+
       if (editingItem) {
         const { error } = await supabase.from("gallery").update({
-          title: result.data.title,
-          description: result.data.description || null,
-          image_url: result.data.image_url,
-          category: result.data.category,
-          display_order: result.data.display_order,
-          is_featured: result.data.is_featured,
+          title,
+          description: description || null,
+          image_url,
+          category,
+          display_order,
+          is_featured,
         }).eq("id", editingItem.id);
         if (error) throw error;
         toast.success("Image updated successfully");
       } else {
         const { error } = await supabase.from("gallery").insert({
-          title: result.data.title,
-          description: result.data.description || null,
-          image_url: result.data.image_url,
-          category: result.data.category,
-          display_order: result.data.display_order,
-          is_featured: result.data.is_featured,
+          title,
+          description: description || null,
+          image_url,
+          category,
+          display_order,
+          is_featured,
           created_by: user?.id!,
         });
         if (error) throw error;
-        toast.success("Image added successfully");
+        toast.success("Image uploaded successfully");
       }
+
+      // Reset form state
       setIsDialogOpen(false);
       setIsAddDialogOpen(false);
       setEditingItem(null);
+      setSelectedFile(null);
+      setPreviewUrl(null);
       fetchGallery();
     } catch (error: any) {
       toast.error("Failed to save: " + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -140,10 +207,45 @@ const Gallery = () => {
     }
   };
 
+  const resetFormState = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const categories = ["all", ...Array.from(new Set(galleryItems.map(item => item.category)))];
 
   const GalleryForm = ({ item }: { item?: GalleryItem }) => (
     <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
+      <div>
+        <Label>Image *</Label>
+        <div className="mt-2">
+          {(previewUrl || item?.image_url) && (
+            <img 
+              src={previewUrl || item?.image_url} 
+              alt="Preview" 
+              className="w-full h-48 object-cover rounded-md mb-2"
+            />
+          )}
+          <div 
+            className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              {selectedFile ? selectedFile.name : "Click to select an image"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG/GIF</p>
+          </div>
+          <input 
+            ref={fileInputRef}
+            type="file" 
+            accept="image/*" 
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
+      </div>
       <div>
         <Label>Title *</Label>
         <Input name="title" defaultValue={item?.title || ""} required maxLength={200} />
@@ -151,10 +253,6 @@ const Gallery = () => {
       <div>
         <Label>Description</Label>
         <Textarea name="description" defaultValue={item?.description || ""} maxLength={500} />
-      </div>
-      <div>
-        <Label>Image URL *</Label>
-        <Input name="image_url" type="url" defaultValue={item?.image_url || ""} required maxLength={500} placeholder="https://example.com/image.jpg" />
       </div>
       <div>
         <Label>Category *</Label>
@@ -168,7 +266,16 @@ const Gallery = () => {
         <input type="checkbox" name="is_featured" id="form_is_featured" defaultChecked={item?.is_featured || false} />
         <Label htmlFor="form_is_featured">Featured</Label>
       </div>
-      <Button type="submit" className="w-full">{item ? "Save Changes" : "Add Image"}</Button>
+      <Button type="submit" className="w-full" disabled={uploading}>
+        {uploading ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Uploading...
+          </>
+        ) : (
+          item ? "Save Changes" : "Upload Image"
+        )}
+      </Button>
     </form>
   );
 
@@ -287,7 +394,7 @@ const Gallery = () => {
         </Dialog>
 
         {/* Add Image Dialog */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) resetFormState(); }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Upload New Image</DialogTitle>
