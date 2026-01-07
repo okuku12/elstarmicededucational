@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, FileText, Loader2 } from "lucide-react";
 import { assignmentSchema } from "@/lib/validations";
 
 interface Assignment {
@@ -20,6 +20,7 @@ interface Assignment {
   due_date: string | null;
   max_marks: number;
   class_subject_id: string;
+  file_url: string | null;
 }
 
 interface ClassSubject {
@@ -38,6 +39,9 @@ const AssignmentsManagement = () => {
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedClassSubject, setSelectedClassSubject] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
     try {
@@ -73,6 +77,46 @@ const AssignmentsManagement = () => {
     };
   }, []);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ];
+
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a PDF or Word document");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File must be less than 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const uploadFile = async (file: File): Promise<string> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("assignment-files")
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("assignment-files")
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
   const handleSave = async (formData: FormData) => {
     const rawData = {
       title: (formData.get("title") as string || "").trim(),
@@ -89,13 +133,27 @@ const AssignmentsManagement = () => {
       return;
     }
 
+    if (!editingAssignment && !selectedFile) {
+      toast.error("Please upload a PDF or Word document for the assignment");
+      return;
+    }
+
+    setUploading(true);
+
     try {
+      let file_url = editingAssignment?.file_url || null;
+
+      if (selectedFile) {
+        file_url = await uploadFile(selectedFile);
+      }
+
       const data = {
         title: result.data.title,
         description: result.data.description || null,
         class_subject_id: result.data.class_subject_id,
         due_date: result.data.due_date || null,
         max_marks: result.data.max_marks,
+        file_url,
         created_by: user?.id,
       };
 
@@ -112,8 +170,11 @@ const AssignmentsManagement = () => {
       setIsDialogOpen(false);
       setEditingAssignment(null);
       setSelectedClassSubject("");
+      setSelectedFile(null);
     } catch (error: any) {
       toast.error("Failed to save: " + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -138,6 +199,7 @@ const AssignmentsManagement = () => {
   const openCreateDialog = () => {
     setEditingAssignment(null);
     setSelectedClassSubject("");
+    setSelectedFile(null);
     setIsDialogOpen(true);
   };
 
@@ -162,12 +224,34 @@ const AssignmentsManagement = () => {
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
               <div>
+                <Label>Assignment File (PDF/DOC) *</Label>
+                <div className="mt-2">
+                  <div 
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      {selectedFile ? selectedFile.name : "Click to select PDF or Word document"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Max 10MB</p>
+                  </div>
+                  <input 
+                    ref={fileInputRef}
+                    type="file" 
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+              <div>
                 <Label>Title *</Label>
                 <Input name="title" required maxLength={200} />
               </div>
               <div>
                 <Label>Description</Label>
-                <Textarea name="description" maxLength={2000} />
+                <Textarea name="description" maxLength={2000} placeholder="Brief description of the assignment..." />
               </div>
               <div>
                 <Label>Class & Subject *</Label>
@@ -193,7 +277,14 @@ const AssignmentsManagement = () => {
                 <Label>Max Marks</Label>
                 <Input name="max_marks" type="number" defaultValue="100" min="1" max="1000" />
               </div>
-              <Button type="submit" className="w-full">Create Assignment</Button>
+              <Button type="submit" className="w-full" disabled={uploading}>
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : "Create Assignment"}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -204,6 +295,8 @@ const AssignmentsManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
+                <TableHead>Class & Subject</TableHead>
+                <TableHead>File</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Max Marks</TableHead>
                 <TableHead>Actions</TableHead>
@@ -215,20 +308,34 @@ const AssignmentsManagement = () => {
                 return (
                   <TableRow key={assignment.id}>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{assignment.title}</div>
-                        {classSubject && (
-                          <div className="text-sm text-muted-foreground">
-                            {classSubject.classes.name} - {classSubject.subjects.name}
-                          </div>
-                        )}
-                      </div>
+                      <div className="font-medium">{assignment.title}</div>
+                    </TableCell>
+                    <TableCell>
+                      {classSubject ? (
+                        <div className="text-sm">
+                          <div className="font-medium">{classSubject.classes.name}</div>
+                          <div className="text-muted-foreground">{classSubject.subjects.name}</div>
+                        </div>
+                      ) : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {assignment.file_url ? (
+                        <a 
+                          href={assignment.file_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        >
+                          <FileText className="h-4 w-4" />
+                          View
+                        </a>
+                      ) : "-"}
                     </TableCell>
                     <TableCell>{assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : "No due date"}</TableCell>
                     <TableCell>{assignment.max_marks}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Dialog open={isDialogOpen && editingAssignment?.id === assignment.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingAssignment(null); setSelectedClassSubject(""); } }}>
+                        <Dialog open={isDialogOpen && editingAssignment?.id === assignment.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingAssignment(null); setSelectedClassSubject(""); setSelectedFile(null); } }}>
                           <DialogTrigger asChild>
                             <Button variant="outline" size="sm" onClick={() => openEditDialog(assignment)}>
                               <Pencil className="h-4 w-4" />
@@ -239,6 +346,38 @@ const AssignmentsManagement = () => {
                               <DialogTitle>Edit Assignment</DialogTitle>
                             </DialogHeader>
                             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
+                              <div>
+                                <Label>Assignment File (PDF/DOC)</Label>
+                                <div className="mt-2">
+                                  {assignment.file_url && !selectedFile && (
+                                    <a 
+                                      href={assignment.file_url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 text-primary hover:underline mb-2"
+                                    >
+                                      <FileText className="h-4 w-4" />
+                                      Current file
+                                    </a>
+                                  )}
+                                  <div 
+                                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                                    onClick={() => fileInputRef.current?.click()}
+                                  >
+                                    <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                                    <p className="text-sm text-muted-foreground">
+                                      {selectedFile ? selectedFile.name : "Click to replace file"}
+                                    </p>
+                                  </div>
+                                  <input 
+                                    ref={fileInputRef}
+                                    type="file" 
+                                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                    onChange={handleFileSelect}
+                                    className="hidden"
+                                  />
+                                </div>
+                              </div>
                               <div>
                                 <Label>Title *</Label>
                                 <Input name="title" defaultValue={assignment.title} required maxLength={200} />
@@ -271,7 +410,14 @@ const AssignmentsManagement = () => {
                                 <Label>Max Marks</Label>
                                 <Input name="max_marks" type="number" defaultValue={assignment.max_marks} min="1" max="1000" />
                               </div>
-                              <Button type="submit" className="w-full">Save Changes</Button>
+                              <Button type="submit" className="w-full" disabled={uploading}>
+                                {uploading ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Saving...
+                                  </>
+                                ) : "Save Changes"}
+                              </Button>
                             </form>
                           </DialogContent>
                         </Dialog>
