@@ -4,8 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, Calendar, Award } from "lucide-react";
+import { BookOpen, FileText, Calendar, Award, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface StudentData {
   id: string;
@@ -16,9 +17,12 @@ interface StudentData {
 interface Assignment {
   id: string;
   title: string;
-  description: string;
-  due_date: string;
+  description: string | null;
+  due_date: string | null;
   max_marks: number;
+  file_url: string | null;
+  class_name: string;
+  subject_name: string;
 }
 
 const StudentDashboard = () => {
@@ -57,15 +61,36 @@ const StudentDashboard = () => {
           if (studentError) throw studentError;
           setStudentData(student);
 
-          // Fetch assignments for the student's class
-          const { data: assignmentsData, error: assignmentsError } = await supabase
-            .from("assignments")
-            .select("id, title, description, due_date, max_marks")
-            .order("due_date", { ascending: true })
-            .limit(10);
+          // Fetch assignments only for the student's class
+          if (student.class_id) {
+            const { data: assignmentsData, error: assignmentsError } = await supabase
+              .from("assignments")
+              .select(`
+                id, title, description, due_date, max_marks, file_url,
+                class_subjects!inner (
+                  class_id,
+                  classes (name),
+                  subjects (name)
+                )
+              `)
+              .eq("class_subjects.class_id", student.class_id)
+              .order("due_date", { ascending: true });
 
-          if (assignmentsError) throw assignmentsError;
-          setAssignments(assignmentsData || []);
+            if (assignmentsError) throw assignmentsError;
+            
+            const formattedAssignments = (assignmentsData || []).map((a: any) => ({
+              id: a.id,
+              title: a.title,
+              description: a.description,
+              due_date: a.due_date,
+              max_marks: a.max_marks,
+              file_url: a.file_url,
+              class_name: a.class_subjects?.classes?.name || "",
+              subject_name: a.class_subjects?.subjects?.name || "",
+            }));
+            
+            setAssignments(formattedAssignments);
+          }
         }
       } catch (error) {
         console.error("Error checking student role:", error);
@@ -137,27 +162,43 @@ const StudentDashboard = () => {
               <div className="space-y-4">
                 {assignments.length > 0 ? (
                   assignments.map((assignment) => (
-                    <Card key={assignment.id}>
-                      <CardHeader>
+                    <Card key={assignment.id} className="overflow-hidden">
+                      <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
-                          <div>
+                          <div className="space-y-1">
                             <CardTitle className="text-lg">{assignment.title}</CardTitle>
-                            <CardDescription>{assignment.description}</CardDescription>
+                            <div className="flex gap-2">
+                              <Badge variant="secondary">{assignment.subject_name}</Badge>
+                              <Badge variant="outline">{assignment.class_name}</Badge>
+                            </div>
                           </div>
-                          <Badge variant="outline">
+                          <Badge>
                             {assignment.max_marks} marks
                           </Badge>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          Due: {new Date(assignment.due_date).toLocaleDateString()}
-                        </p>
+                      <CardContent className="space-y-3">
+                        {assignment.description && (
+                          <p className="text-sm text-muted-foreground">{assignment.description}</p>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">
+                            Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : "No due date"}
+                          </p>
+                          {assignment.file_url && (
+                            <Button asChild size="sm" variant="outline">
+                              <a href={assignment.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </a>
+                            </Button>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   ))
                 ) : (
-                  <p className="text-muted-foreground">No assignments available</p>
+                  <p className="text-muted-foreground text-center py-8">No assignments available for your class</p>
                 )}
               </div>
             </CardContent>
