@@ -10,6 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
+interface Profile {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
 interface Student {
   id: string;
   student_id: string;
@@ -21,7 +27,7 @@ interface Student {
   parent_name: string | null;
   parent_phone: string | null;
   parent_email: string | null;
-  profiles: { full_name: string; email: string } | null;
+  profile?: Profile;
 }
 
 interface Class {
@@ -40,15 +46,26 @@ const StudentsManagement = () => {
 
   const fetchData = async () => {
     try {
-      const [studentsRes, classesRes] = await Promise.all([
-        supabase.from("students").select("*, profiles!students_user_id_fkey(full_name, email)").order("created_at", { ascending: false }),
+      const [studentsRes, classesRes, profilesRes] = await Promise.all([
+        supabase.from("students").select("*").order("created_at", { ascending: false }),
         supabase.from("classes").select("*").order("grade_level", { ascending: true }),
+        supabase.from("profiles").select("id, full_name, email"),
       ]);
 
       if (studentsRes.error) throw studentsRes.error;
       if (classesRes.error) throw classesRes.error;
+      if (profilesRes.error) throw profilesRes.error;
 
-      setStudents(studentsRes.data as any || []);
+      // Map profiles by id for quick lookup
+      const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p]) || []);
+      
+      // Join students with profiles manually
+      const studentsWithProfiles = (studentsRes.data || []).map(student => ({
+        ...student,
+        profile: profilesMap.get(student.user_id)
+      }));
+
+      setStudents(studentsWithProfiles);
       setClasses(classesRes.data || []);
     } catch (error: any) {
       toast.error("Failed to fetch data: " + error.message);
@@ -136,7 +153,7 @@ const StudentsManagement = () => {
               {students.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell>{student.student_id}</TableCell>
-                  <TableCell>{student.profiles?.full_name || "N/A"}</TableCell>
+                  <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
                   <TableCell>{classes.find((c) => c.id === student.class_id)?.name || "Not assigned"}</TableCell>
                   <TableCell>{student.parent_name || "N/A"}</TableCell>
                   <TableCell>
