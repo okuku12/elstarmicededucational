@@ -10,6 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 
+interface Profile {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
 interface Teacher {
   id: string;
   teacher_id: string;
@@ -19,7 +25,7 @@ interface Teacher {
   qualification: string | null;
   specialization: string | null;
   address: string | null;
-  profiles: { full_name: string; email: string } | null;
+  profile?: Profile;
 }
 
 const TeachersManagement = () => {
@@ -30,13 +36,24 @@ const TeachersManagement = () => {
 
   const fetchTeachers = async () => {
     try {
-      const { data, error } = await supabase
-        .from("teachers")
-        .select("*, profiles!teachers_user_id_fkey(full_name, email)")
-        .order("created_at", { ascending: false });
+      const [teachersRes, profilesRes] = await Promise.all([
+        supabase.from("teachers").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, full_name, email"),
+      ]);
 
-      if (error) throw error;
-      setTeachers(data as any || []);
+      if (teachersRes.error) throw teachersRes.error;
+      if (profilesRes.error) throw profilesRes.error;
+
+      // Map profiles by id for quick lookup
+      const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p]) || []);
+      
+      // Join teachers with profiles manually
+      const teachersWithProfiles = (teachersRes.data || []).map(teacher => ({
+        ...teacher,
+        profile: profilesMap.get(teacher.user_id)
+      }));
+
+      setTeachers(teachersWithProfiles);
     } catch (error: any) {
       toast.error("Failed to fetch teachers: " + error.message);
     } finally {
@@ -121,7 +138,7 @@ const TeachersManagement = () => {
               {teachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell>{teacher.teacher_id}</TableCell>
-                  <TableCell>{teacher.profiles?.full_name || "N/A"}</TableCell>
+                  <TableCell>{teacher.profile?.full_name || "N/A"}</TableCell>
                   <TableCell>{teacher.specialization || "N/A"}</TableCell>
                   <TableCell>{teacher.qualification || "N/A"}</TableCell>
                   <TableCell>
