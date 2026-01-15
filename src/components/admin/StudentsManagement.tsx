@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
@@ -40,9 +40,12 @@ interface Class {
 const StudentsManagement = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   const fetchData = async () => {
     try {
@@ -67,6 +70,7 @@ const StudentsManagement = () => {
 
       setStudents(studentsWithProfiles);
       setClasses(classesRes.data || []);
+      setProfiles(profilesRes.data || []);
     } catch (error: any) {
       toast.error("Failed to fetch data: " + error.message);
     } finally {
@@ -88,6 +92,12 @@ const StudentsManagement = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Get profiles that are not already students
+  const getAvailableProfiles = () => {
+    const studentUserIds = new Set(students.map(s => s.user_id));
+    return profiles.filter(p => !studentUserIds.has(p.id));
+  };
 
   const handleSave = async (formData: FormData) => {
     try {
@@ -116,6 +126,51 @@ const StudentsManagement = () => {
     }
   };
 
+  const handleAddStudent = async (formData: FormData) => {
+    try {
+      if (!selectedUserId) {
+        toast.error("Please select a user");
+        return;
+      }
+
+      const genderValue = formData.get("gender") as string;
+      const validGender = genderValue && ["male", "female", "other"].includes(genderValue) 
+        ? genderValue as "male" | "female" | "other" 
+        : undefined;
+      
+      const data = {
+        user_id: selectedUserId,
+        student_id: formData.get("student_id") as string,
+        class_id: formData.get("class_id") as string || undefined,
+        date_of_birth: formData.get("date_of_birth") as string || undefined,
+        gender: validGender,
+        address: formData.get("address") as string || undefined,
+        parent_name: formData.get("parent_name") as string || undefined,
+        parent_phone: formData.get("parent_phone") as string || undefined,
+        parent_email: formData.get("parent_email") as string || undefined,
+      };
+
+      const { error } = await supabase.from("students").insert([data]);
+      if (error) throw error;
+
+      // Also assign the student role to this user
+      const { error: roleError } = await supabase.from("user_roles").insert([{
+        user_id: selectedUserId,
+        role: "student" as const,
+      }]);
+
+      if (roleError && !roleError.message.includes("duplicate")) {
+        console.error("Failed to assign student role:", roleError);
+      }
+
+      toast.success("Student added successfully");
+      setIsAddDialogOpen(false);
+      setSelectedUserId("");
+    } catch (error: any) {
+      toast.error("Failed to add student: " + error.message);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this student?")) return;
 
@@ -132,10 +187,104 @@ const StudentsManagement = () => {
     return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
   }
 
+  const availableProfiles = getAvailableProfiles();
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Students Management</CardTitle>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Student
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Student</DialogTitle>
+              <DialogDescription>
+                Select a user and fill in their student details.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={(e) => { e.preventDefault(); handleAddStudent(new FormData(e.currentTarget)); }} className="space-y-4">
+              <div>
+                <Label>Select User *</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a user" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProfiles.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No available users. All users are already students.
+                      </div>
+                    ) : (
+                      availableProfiles.map((profile) => (
+                        <SelectItem key={profile.id} value={profile.id}>
+                          {profile.full_name} ({profile.email})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Student ID *</Label>
+                <Input name="student_id" placeholder="e.g., STU001" required />
+              </div>
+              <div>
+                <Label>Class</Label>
+                <Select name="class_id">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((cls) => (
+                      <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Date of Birth</Label>
+                <Input name="date_of_birth" type="date" />
+              </div>
+              <div>
+                <Label>Gender</Label>
+                <Select name="gender">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Address</Label>
+                <Input name="address" placeholder="Enter address" />
+              </div>
+              <div>
+                <Label>Parent Name</Label>
+                <Input name="parent_name" placeholder="Parent/Guardian name" />
+              </div>
+              <div>
+                <Label>Parent Phone</Label>
+                <Input name="parent_phone" placeholder="Parent phone number" />
+              </div>
+              <div>
+                <Label>Parent Email</Label>
+                <Input name="parent_email" type="email" placeholder="Parent email" />
+              </div>
+              <Button type="submit" className="w-full" disabled={!selectedUserId}>
+                Add Student
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -150,86 +299,94 @@ const StudentsManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.student_id}</TableCell>
-                  <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
-                  <TableCell>{classes.find((c) => c.id === student.class_id)?.name || "Not assigned"}</TableCell>
-                  <TableCell>{student.parent_name || "N/A"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Dialog open={isDialogOpen && editingStudent?.id === student.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingStudent(null); }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setEditingStudent(student)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Edit Student</DialogTitle>
-                          </DialogHeader>
-                          <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
-                            <div>
-                              <Label>Student ID</Label>
-                              <Input name="student_id" defaultValue={student.student_id} required />
-                            </div>
-                            <div>
-                              <Label>Class</Label>
-                              <Select name="class_id" defaultValue={student.class_id || ""}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select class" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {classes.map((cls) => (
-                                    <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label>Date of Birth</Label>
-                              <Input name="date_of_birth" type="date" defaultValue={student.date_of_birth || ""} />
-                            </div>
-                            <div>
-                              <Label>Gender</Label>
-                              <Select name="gender" defaultValue={student.gender || ""}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="male">Male</SelectItem>
-                                  <SelectItem value="female">Female</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label>Address</Label>
-                              <Input name="address" defaultValue={student.address || ""} />
-                            </div>
-                            <div>
-                              <Label>Parent Name</Label>
-                              <Input name="parent_name" defaultValue={student.parent_name || ""} />
-                            </div>
-                            <div>
-                              <Label>Parent Phone</Label>
-                              <Input name="parent_phone" defaultValue={student.parent_phone || ""} />
-                            </div>
-                            <div>
-                              <Label>Parent Email</Label>
-                              <Input name="parent_email" type="email" defaultValue={student.parent_email || ""} />
-                            </div>
-                            <Button type="submit" className="w-full">Save Changes</Button>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(student.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {students.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    No students found. Click "Add Student" to add one.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                students.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>{student.student_id}</TableCell>
+                    <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
+                    <TableCell>{classes.find((c) => c.id === student.class_id)?.name || "Not assigned"}</TableCell>
+                    <TableCell>{student.parent_name || "N/A"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Dialog open={isDialogOpen && editingStudent?.id === student.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingStudent(null); }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setEditingStudent(student)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Student</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
+                              <div>
+                                <Label>Student ID</Label>
+                                <Input name="student_id" defaultValue={student.student_id} required />
+                              </div>
+                              <div>
+                                <Label>Class</Label>
+                                <Select name="class_id" defaultValue={student.class_id || ""}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select class" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {classes.map((cls) => (
+                                      <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label>Date of Birth</Label>
+                                <Input name="date_of_birth" type="date" defaultValue={student.date_of_birth || ""} />
+                              </div>
+                              <div>
+                                <Label>Gender</Label>
+                                <Select name="gender" defaultValue={student.gender || ""}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">Female</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label>Address</Label>
+                                <Input name="address" defaultValue={student.address || ""} />
+                              </div>
+                              <div>
+                                <Label>Parent Name</Label>
+                                <Input name="parent_name" defaultValue={student.parent_name || ""} />
+                              </div>
+                              <div>
+                                <Label>Parent Phone</Label>
+                                <Input name="parent_phone" defaultValue={student.parent_phone || ""} />
+                              </div>
+                              <div>
+                                <Label>Parent Email</Label>
+                                <Input name="parent_email" type="email" defaultValue={student.parent_email || ""} />
+                              </div>
+                              <Button type="submit" className="w-full">Save Changes</Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(student.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
