@@ -1,7 +1,46 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Target, Eye, Heart } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Target, Eye, Heart, User, Mail, Phone } from "lucide-react";
+
+interface PrincipalInfo {
+  id: string;
+  name: string;
+  title: string;
+  image_url: string | null;
+  message: string;
+  email: string | null;
+  phone: string | null;
+}
+
 const About = () => {
-  return <div className="min-h-screen py-20">
+  const [principalInfo, setPrincipalInfo] = useState<PrincipalInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrincipalInfo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("principal_info")
+          .select("*")
+          .limit(1)
+          .single();
+
+        if (error && error.code !== "PGRST116") throw error;
+        setPrincipalInfo(data);
+      } catch (error) {
+        console.error("Error fetching principal info:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrincipalInfo();
+  }, []);
+
+  return (
+    <div className="min-h-screen py-20">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
@@ -61,29 +100,68 @@ const About = () => {
 
         {/* Principal's Message */}
         <div className="bg-muted/30 rounded-lg p-8 md:p-12 mb-20">
-          <h2 className="text-3xl font-bold mb-6 text-foreground">Message from the Principal</h2>
-          <div className="space-y-4 text-muted-foreground">
-            <p>
-              Dear Students, Parents, and Community Members,
-            </p>
-            <p>It is with great pride and enthusiasm that I welcome you to Excellence Academy. Our school has been a cornerstone of educational excellence in our community for over two decades, and we continue to evolve and adapt to meet the needs of our students in the 21st centu</p>
-            <p>We understand that education is not just about passing examinations, but about preparing young people for life. That's why we emphasize values such as integrity, respect, and responsibility alongside academic achievement.</p>
-            <p>I invite you to join our community and experience the Elstar Mix Secondary School difference. Together, we can help your child reach their full potential</p>
-            <p className="font-semibold text-foreground">I invite you to join our community and experience the Elstar Mix Secondary School difference. Together, we can help your child reach their full potential.
-
-Mr. Joel Onyango
-
-Director, Elstar Mixed Education Centre<br />
-              Principal, Excellence Academy
-            </p>
-          </div>
+          <h2 className="text-3xl font-bold mb-8 text-foreground text-center">Message from the Principal</h2>
+          
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : principalInfo ? (
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              {/* Principal Image & Info */}
+              <div className="flex flex-col items-center md:items-start gap-4 md:min-w-[250px]">
+                <Avatar className="h-40 w-40 border-4 border-primary/20 shadow-lg">
+                  <AvatarImage src={principalInfo.image_url || undefined} alt={principalInfo.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-4xl">
+                    <User className="h-20 w-20" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-center md:text-left">
+                  <h3 className="text-xl font-bold text-foreground">{principalInfo.name}</h3>
+                  <p className="text-primary font-medium">{principalInfo.title}</p>
+                  {principalInfo.email && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                      <a href={`mailto:${principalInfo.email}`} className="hover:text-primary">
+                        {principalInfo.email}
+                      </a>
+                    </div>
+                  )}
+                  {principalInfo.phone && (
+                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                      <Phone className="h-4 w-4" />
+                      <a href={`tel:${principalInfo.phone}`} className="hover:text-primary">
+                        {principalInfo.phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Message */}
+              <div className="flex-1 space-y-4 text-muted-foreground">
+                {principalInfo.message.split('\n\n').map((paragraph, index) => (
+                  <p key={index}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 text-muted-foreground">
+              <p>Dear Students, Parents, and Community Members,</p>
+              <p>
+                It is with great pride and enthusiasm that I welcome you to Excellence Academy.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* School History */}
         <div>
           <h2 className="text-3xl font-bold mb-8 text-foreground text-center">Our History</h2>
           <div className="max-w-3xl mx-auto space-y-6 text-muted-foreground">
-            <p>Elstar Mixed Education Centre was founded in 2018 with a vision to provide quality education that nurtures not just academic excellence, but also strong character, leadership skills, and a sense of social responsibility.</p>
+            <p>
+              Elstar Mixed Education Centre was founded in 2018 with a vision to provide quality education that nurtures not just academic excellence, but also strong character, leadership skills, and a sense of social responsibility.
+            </p>
             <p>
               Over the years, we have expanded our facilities to include modern science laboratories, computer labs, a well-stocked library, sports facilities, and art studios. Our curriculum has evolved to incorporate the latest educational research and technology while maintaining a strong foundation in core academic subjects.
             </p>
@@ -93,6 +171,8 @@ Director, Elstar Mixed Education Centre<br />
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default About;
