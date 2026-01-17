@@ -568,6 +568,45 @@ export type Database = {
         }
         Relationships: []
       }
+      principal_info: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          image_url: string | null
+          message: string
+          name: string
+          phone: string | null
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          message: string
+          name: string
+          phone?: string | null
+          title?: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          message?: string
+          name?: string
+          phone?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
