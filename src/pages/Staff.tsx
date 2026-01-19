@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Phone, GraduationCap, Award, Calendar } from "lucide-react";
+import { Mail, Phone, GraduationCap, Award, Calendar, Search, Filter, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface TeacherWithProfile {
   id: string;
@@ -23,6 +26,8 @@ interface TeacherWithProfile {
 const Staff = () => {
   const [teachers, setTeachers] = useState<TeacherWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSpecialization, setSelectedSpecialization] = useState<string>("all");
 
   useEffect(() => {
     fetchTeachers();
@@ -76,6 +81,38 @@ const Staff = () => {
     });
   };
 
+  // Get unique specializations for filter
+  const specializations = useMemo(() => {
+    const specs = teachers
+      .map((t) => t.specialization)
+      .filter((s): s is string => Boolean(s));
+    return [...new Set(specs)].sort();
+  }, [teachers]);
+
+  // Filter teachers based on search and specialization
+  const filteredTeachers = useMemo(() => {
+    return teachers.filter((teacher) => {
+      const matchesSearch =
+        !searchQuery ||
+        teacher.profile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        teacher.teacher_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        teacher.specialization?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        teacher.qualification?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesSpecialization =
+        selectedSpecialization === "all" ||
+        teacher.specialization === selectedSpecialization;
+
+      return matchesSearch && matchesSpecialization;
+    });
+  }, [teachers, searchQuery, selectedSpecialization]);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedSpecialization("all");
+  };
+
+  const hasActiveFilters = searchQuery || selectedSpecialization !== "all";
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -88,6 +125,60 @@ const Staff = () => {
             Meet our dedicated team of educators who are committed to nurturing young minds
             and shaping the future leaders of tomorrow.
           </p>
+        </div>
+      </section>
+
+      {/* Search and Filter Section */}
+      <section className="py-8 border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              {/* Search Input */}
+              <div className="relative flex-1 min-w-[250px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, ID, or qualification..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Specialization Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="All Specializations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Specializations</SelectItem>
+                    {specializations.map((spec) => (
+                      <SelectItem key={spec} value={spec}>
+                        {spec}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Clear Filters */}
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2">
+                <X className="h-4 w-4" />
+                Clear Filters
+              </Button>
+            )}
+          </div>
+
+          {/* Results Count */}
+          {!loading && (
+            <p className="text-sm text-muted-foreground mt-4">
+              Showing {filteredTeachers.length} of {teachers.length} staff members
+              {hasActiveFilters && " (filtered)"}
+            </p>
+          )}
         </div>
       </section>
 
@@ -109,19 +200,26 @@ const Staff = () => {
                 </Card>
               ))}
             </div>
-          ) : teachers.length === 0 ? (
+          ) : filteredTeachers.length === 0 ? (
             <div className="text-center py-16">
               <GraduationCap className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">
-                No Staff Members Yet
+                {teachers.length === 0 ? "No Staff Members Yet" : "No Results Found"}
               </h3>
-              <p className="text-muted-foreground">
-                Staff directory will be populated soon.
+              <p className="text-muted-foreground mb-4">
+                {teachers.length === 0
+                  ? "Staff directory will be populated soon."
+                  : "Try adjusting your search or filter criteria."}
               </p>
+              {hasActiveFilters && (
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {teachers.map((teacher) => (
+              {filteredTeachers.map((teacher) => (
                 <Card
                   key={teacher.id}
                   className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"

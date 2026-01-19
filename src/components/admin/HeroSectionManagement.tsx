@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, Image, X } from "lucide-react";
 import { heroSectionSchema } from "@/lib/validations";
 
 interface HeroSection {
@@ -20,8 +20,12 @@ interface HeroSection {
 const HeroSectionManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,6 +53,55 @@ const HeroSectionManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be less than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `hero-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("hero-images")
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("hero-images")
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  const clearSelectedImage = () => {
+    setSelectedImage(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -87,6 +140,18 @@ const HeroSectionManagement = () => {
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
 
+      let background_image = result.data.background_image || heroSection?.background_image || null;
+
+      // Upload image if selected
+      if (selectedImage) {
+        setUploading(true);
+        try {
+          background_image = await uploadImage(selectedImage);
+        } finally {
+          setUploading(false);
+        }
+      }
+
       if (heroSection?.id) {
         const { error } = await supabase
           .from("hero_section")
@@ -95,7 +160,7 @@ const HeroSectionManagement = () => {
             subtitle: result.data.subtitle || null,
             button_text: result.data.button_text,
             button_link: result.data.button_link,
-            background_image: result.data.background_image || null,
+            background_image: background_image,
             updated_by: userId!,
           })
           .eq("id", heroSection.id);
@@ -109,7 +174,7 @@ const HeroSectionManagement = () => {
             subtitle: result.data.subtitle || null,
             button_text: result.data.button_text,
             button_link: result.data.button_link,
-            background_image: result.data.background_image || null,
+            background_image: background_image,
             updated_by: userId!,
           }]);
 
@@ -120,6 +185,7 @@ const HeroSectionManagement = () => {
         title: "Success",
         description: "Hero section updated successfully",
       });
+      clearSelectedImage();
       fetchHeroSection();
     } catch (error) {
       console.error("Error saving hero section:", error);
@@ -210,21 +276,75 @@ const HeroSectionManagement = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="background_image">Background Image URL</Label>
-            <Input
-              id="background_image"
-              name="background_image"
-              defaultValue={heroSection?.background_image || ""}
-              maxLength={500}
-              placeholder="/hero-school.jpg or https://..."
-              className={errors.background_image ? "border-destructive" : ""}
-            />
+            <Label>Background Image</Label>
+            
+            {/* Image Preview */}
+            {(previewUrl || heroSection?.background_image) && (
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img
+                  src={previewUrl || heroSection?.background_image || ""}
+                  alt="Hero background preview"
+                  className="w-full h-48 object-cover"
+                />
+                {previewUrl && (
+                  <button
+                    type="button"
+                    onClick={clearSelectedImage}
+                    className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex-1"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? "Uploading..." : selectedImage ? "Change Image" : "Upload Image"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+            </div>
+            
+            {selectedImage && (
+              <p className="text-sm text-muted-foreground">
+                Selected: {selectedImage.name}
+              </p>
+            )}
+
+            {/* URL Input as alternative */}
+            <div className="pt-2">
+              <Label htmlFor="background_image" className="text-sm text-muted-foreground">
+                Or enter image URL directly
+              </Label>
+              <Input
+                id="background_image"
+                name="background_image"
+                defaultValue={heroSection?.background_image || ""}
+                maxLength={500}
+                placeholder="/hero-school.jpg or https://..."
+                className={errors.background_image ? "border-destructive" : ""}
+              />
+            </div>
             {errors.background_image && <p className="text-sm text-destructive">{errors.background_image}</p>}
           </div>
 
-          <Button type="submit" disabled={saving}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
+          <Button type="submit" disabled={saving || uploading}>
+            {(saving || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {uploading ? "Uploading..." : "Save Changes"}
           </Button>
         </form>
       </CardContent>
