@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,8 +20,11 @@ import PrincipalManagement from "@/components/admin/PrincipalManagement";
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
+  
+  const defaultTab = searchParams.get("tab") || "hero";
 
   useEffect(() => {
     const checkAdminRole = async () => {
@@ -78,7 +81,7 @@ const AdminDashboard = () => {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="hero" className="space-y-6">
+      <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6 lg:grid-cols-11 h-auto gap-1">
           <TabsTrigger value="hero" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
