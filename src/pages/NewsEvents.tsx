@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Newspaper } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, MapPin, Newspaper, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Announcement {
   id: string;
@@ -26,10 +29,29 @@ const NewsEvents = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchNewsAndEvents();
   }, []);
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+    checkAdminRole();
+  }, [user]);
 
   const fetchNewsAndEvents = async () => {
     try {
@@ -69,9 +91,19 @@ const NewsEvents = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Latest News */}
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <Newspaper className="h-6 w-6 text-primary" />
-              <h2 className="text-3xl font-bold text-foreground">Latest News</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Newspaper className="h-6 w-6 text-primary" />
+                <h2 className="text-3xl font-bold text-foreground">Latest News</h2>
+              </div>
+              {isAdmin && (
+                <Button asChild size="sm">
+                  <Link to="/admin?tab=announcements">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Link>
+                </Button>
+              )}
             </div>
             
             {loading ? (
@@ -109,9 +141,19 @@ const NewsEvents = () => {
 
           {/* Upcoming Events */}
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <Calendar className="h-6 w-6 text-primary" />
-              <h2 className="text-3xl font-bold text-foreground">Upcoming Events</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-6 w-6 text-primary" />
+                <h2 className="text-3xl font-bold text-foreground">Upcoming Events</h2>
+              </div>
+              {isAdmin && (
+                <Button asChild size="sm">
+                  <Link to="/admin?tab=events">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Link>
+                </Button>
+              )}
             </div>
             
             {loading ? (
