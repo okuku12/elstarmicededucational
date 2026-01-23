@@ -18,12 +18,13 @@ const Contact = () => {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState(""); // Bot trap field
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
-    // Validate form data
+    // Validate form data client-side first for UX
     const result = contactSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ContactFormData, string>> = {};
@@ -39,13 +40,26 @@ const Contact = () => {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("contact_submissions").insert([{
-        name: result.data.name,
-        email: result.data.email,
-        subject: result.data.subject,
-        message: result.data.message
-      }]);
-      if (error) throw error;
+      // Use edge function for server-side validation and rate limiting
+      const { data: functionData, error: functionError } = await supabase.functions.invoke("submit-contact", {
+        body: {
+          name: result.data.name,
+          email: result.data.email,
+          subject: result.data.subject,
+          message: result.data.message,
+          honeypot, // Include honeypot for bot detection
+        },
+      });
+
+      if (functionError) {
+        throw new Error(functionError.message || "Failed to send message");
+      }
+
+      if (!functionData?.success) {
+        const errorMessage = functionData?.details?.join(", ") || functionData?.error || "Failed to send message";
+        throw new Error(errorMessage);
+      }
+
       toast.success("Thank you! We'll get back to you soon.");
       setFormData({
         name: "",
@@ -55,7 +69,8 @@ const Contact = () => {
       });
     } catch (error) {
       console.error("Error submitting contact form:", error);
-      toast.error("Failed to send message. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to send message. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -172,6 +187,17 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Honeypot field - hidden from users, bots will fill it */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    style={{ position: "absolute", left: "-9999px", opacity: 0 }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
