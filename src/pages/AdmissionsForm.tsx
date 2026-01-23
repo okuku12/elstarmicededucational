@@ -27,12 +27,13 @@ const AdmissionsForm = () => {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof AdmissionsFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState(""); // Bot trap field
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
-    // Validate form data
+    // Validate form data client-side first for UX
     const result = admissionsSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof AdmissionsFormData, string>> = {};
@@ -48,28 +49,38 @@ const AdmissionsForm = () => {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("admission_applications")
-        .insert([{
-          student_name: result.data.studentName,
-          date_of_birth: result.data.dateOfBirth,
+      // Use edge function for server-side validation and rate limiting
+      const { data: functionData, error: functionError } = await supabase.functions.invoke("submit-admission", {
+        body: {
+          studentName: result.data.studentName,
+          dateOfBirth: result.data.dateOfBirth,
           gender: result.data.gender,
-          parent_name: result.data.parentName,
-          parent_email: result.data.parentEmail,
-          parent_phone: result.data.parentPhone,
+          parentName: result.data.parentName,
+          parentEmail: result.data.parentEmail,
+          parentPhone: result.data.parentPhone,
           address: result.data.address,
-          grade_applying_for: result.data.gradeApplyingFor,
-          previous_school: result.data.previousSchool || null,
-          additional_info: result.data.additionalInfo || null,
-        }]);
+          gradeApplyingFor: result.data.gradeApplyingFor,
+          previousSchool: result.data.previousSchool || null,
+          additionalInfo: result.data.additionalInfo || null,
+          honeypot, // Include honeypot for bot detection
+        },
+      });
 
-      if (error) throw error;
+      if (functionError) {
+        throw new Error(functionError.message || "Failed to submit application");
+      }
+
+      if (!functionData?.success) {
+        const errorMessage = functionData?.details?.join(", ") || functionData?.error || "Failed to submit application";
+        throw new Error(errorMessage);
+      }
 
       toast.success("Application submitted successfully! We'll contact you soon.");
       navigate("/admissions");
     } catch (error) {
       console.error("Error submitting application:", error);
-      toast.error("Failed to submit application. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit application. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -110,6 +121,17 @@ const AdmissionsForm = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Honeypot field - hidden from users, bots will fill it */}
+              <input
+                type="text"
+                name="website"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                style={{ position: "absolute", left: "-9999px", opacity: 0 }}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
               {/* Student Information */}
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-foreground">Student Information</h3>
