@@ -82,20 +82,19 @@ const HeroSectionManagement = () => {
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `hero-${Date.now()}.${fileExt}`;
+    // Use secure server-side upload function
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", "hero-images");
 
-    const { error: uploadError } = await supabase.storage
-      .from("hero-images")
-      .upload(fileName, file, { upsert: true });
+    const { data, error } = await supabase.functions.invoke("upload-image", {
+      body: formData,
+    });
 
-    if (uploadError) throw uploadError;
+    if (error) throw new Error(error.message || "Upload failed");
+    if (!data?.publicUrl) throw new Error("Failed to get upload URL");
 
-    const { data: { publicUrl } } = supabase.storage
-      .from("hero-images")
-      .getPublicUrl(fileName);
-
-    return publicUrl;
+    return data.publicUrl;
   };
 
   const clearSelectedImage = () => {
