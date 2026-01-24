@@ -102,20 +102,19 @@ const Gallery = () => {
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    // Use secure server-side upload function
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", "gallery-images");
 
-    const { error: uploadError } = await supabase.storage
-      .from("gallery-images")
-      .upload(fileName, file);
+    const { data, error } = await supabase.functions.invoke("upload-image", {
+      body: formData,
+    });
 
-    if (uploadError) throw uploadError;
+    if (error) throw new Error(error.message || "Upload failed");
+    if (!data?.publicUrl) throw new Error("Failed to get upload URL");
 
-    const { data: { publicUrl } } = supabase.storage
-      .from("gallery-images")
-      .getPublicUrl(fileName);
-
-    return publicUrl;
+    return data.publicUrl;
   };
 
   const handleSave = async (formData: FormData) => {

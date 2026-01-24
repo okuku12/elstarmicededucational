@@ -70,20 +70,19 @@ const PrincipalManagement = () => {
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `principal-${Date.now()}.${fileExt}`;
+    // Use secure server-side upload function
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", "principal-images");
 
-    const { error: uploadError } = await supabase.storage
-      .from("principal-images")
-      .upload(fileName, file, { upsert: true });
+    const { data, error } = await supabase.functions.invoke("upload-image", {
+      body: formData,
+    });
 
-    if (uploadError) throw uploadError;
+    if (error) throw new Error(error.message || "Upload failed");
+    if (!data?.publicUrl) throw new Error("Failed to get upload URL");
 
-    const { data: { publicUrl } } = supabase.storage
-      .from("principal-images")
-      .getPublicUrl(fileName);
-
-    return publicUrl;
+    return data.publicUrl;
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {

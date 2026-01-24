@@ -3,5 +3,8 @@ project_id = "kcsabjhuqwodhfqnvixs"
 [functions.submit-contact]
 verify_jwt = false
 
+[functions.upload-image]
+verify_jwt = true
+
 [functions.submit-admission]
 verify_jwt = false
