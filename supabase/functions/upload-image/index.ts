@@ -16,6 +16,11 @@ const BUCKET_CONFIG: Record<string, {
     allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
     requiresAdmin: true,
   },
+  "gallery-videos": {
+    maxSizeBytes: 100 * 1024 * 1024, // 100MB for videos
+    allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
+    requiresAdmin: true,
+  },
   "hero-images": {
     maxSizeBytes: 5 * 1024 * 1024, // 5MB
     allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
@@ -33,18 +38,45 @@ const BUCKET_CONFIG: Record<string, {
   },
 };
 
-// Magic bytes for image validation
-const IMAGE_MAGIC_BYTES: Record<string, number[]> = {
+// Magic bytes for file validation
+const FILE_MAGIC_BYTES: Record<string, number[]> = {
   "image/jpeg": [0xFF, 0xD8, 0xFF],
   "image/png": [0x89, 0x50, 0x4E, 0x47],
   "image/gif": [0x47, 0x49, 0x46],
   "image/webp": [0x52, 0x49, 0x46, 0x46], // RIFF header (WebP starts with RIFF)
+  "video/mp4": [0x00, 0x00, 0x00], // MP4 starts with ftyp box (variable offset)
+  "video/webm": [0x1A, 0x45, 0xDF, 0xA3], // EBML header
+  "video/quicktime": [0x00, 0x00, 0x00], // MOV similar to MP4
+  "video/x-msvideo": [0x52, 0x49, 0x46, 0x46], // AVI uses RIFF
 };
 
 function validateMagicBytes(buffer: ArrayBuffer, mimeType: string): boolean {
   const bytes = new Uint8Array(buffer);
-  const expected = IMAGE_MAGIC_BYTES[mimeType];
   
+  // Special handling for video types that have variable headers
+  if (mimeType === "video/mp4" || mimeType === "video/quicktime") {
+    // MP4/MOV files have 'ftyp' signature at offset 4
+    const ftyp = [0x66, 0x74, 0x79, 0x70]; // 'ftyp'
+    for (let i = 0; i < ftyp.length; i++) {
+      if (bytes[4 + i] !== ftyp[i]) return false;
+    }
+    return true;
+  }
+  
+  if (mimeType === "video/x-msvideo") {
+    // AVI files have 'AVI ' at offset 8
+    const riff = [0x52, 0x49, 0x46, 0x46]; // RIFF
+    for (let i = 0; i < riff.length; i++) {
+      if (bytes[i] !== riff[i]) return false;
+    }
+    const avi = [0x41, 0x56, 0x49, 0x20]; // 'AVI '
+    for (let i = 0; i < avi.length; i++) {
+      if (bytes[8 + i] !== avi[i]) return false;
+    }
+    return true;
+  }
+  
+  const expected = FILE_MAGIC_BYTES[mimeType];
   if (!expected) return false;
   
   for (let i = 0; i < expected.length; i++) {
@@ -59,6 +91,15 @@ function validateMagicBytes(buffer: ArrayBuffer, mimeType: string): boolean {
     }
   }
   
+  // Additional check for WebM
+  if (mimeType === "video/webm") {
+    // Just check EBML header is present
+    const ebml = [0x1A, 0x45, 0xDF, 0xA3];
+    for (let i = 0; i < ebml.length; i++) {
+      if (bytes[i] !== ebml[i]) return false;
+    }
+  }
+  
   return true;
 }
 
@@ -68,6 +109,10 @@ function getFileExtension(mimeType: string): string {
     "image/png": "png",
     "image/gif": "gif",
     "image/webp": "webp",
+    "video/mp4": "mp4",
+    "video/webm": "webm",
+    "video/quicktime": "mov",
+    "video/x-msvideo": "avi",
   };
   return map[mimeType] || "bin";
 }

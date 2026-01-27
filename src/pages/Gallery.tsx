@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Upload, Loader2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, Loader2, Play, Image, Video } from "lucide-react";
 
 interface GalleryItem {
   id: string;
@@ -20,13 +21,14 @@ interface GalleryItem {
   category: string;
   is_featured: boolean;
   display_order?: number;
+  media_type: "image" | "video";
 }
 
 const Gallery = () => {
   const { user } = useAuth();
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<GalleryItem[]>([]);
-  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<GalleryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -36,6 +38,7 @@ const Gallery = () => {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -73,7 +76,14 @@ const Gallery = () => {
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
 
-      if (data) setGalleryItems(data);
+      if (data) {
+        // Cast media_type to the correct type
+        const typedData = data.map(item => ({
+          ...item,
+          media_type: (item.media_type === "video" ? "video" : "image") as "image" | "video"
+        }));
+        setGalleryItems(typedData);
+      }
     } catch (error) {
       console.error("Error fetching gallery:", error);
     } finally {
@@ -85,27 +95,33 @@ const Gallery = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+    const isVideo = file.type.startsWith("video/");
+    const isImage = file.type.startsWith("image/");
+
+    if (!isVideo && !isImage) {
+      toast.error("Please select an image or video file");
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
+    // Validate file size
+    const maxSize = isVideo ? 100 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(isVideo ? "Video must be less than 100MB" : "Image must be less than 5MB");
       return;
     }
 
     setSelectedFile(file);
+    setMediaType(isVideo ? "video" : "image");
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const uploadImage = async (file: File): Promise<string> => {
-    // Use secure server-side upload function
+  const uploadMedia = async (file: File): Promise<string> => {
+    const isVideo = file.type.startsWith("video/");
+    const bucket = isVideo ? "gallery-videos" : "gallery-images";
+
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("bucket", "gallery-images");
+    formData.append("bucket", bucket);
 
     const { data, error } = await supabase.functions.invoke("upload-image", {
       body: formData,
@@ -139,9 +155,9 @@ const Gallery = () => {
       return;
     }
 
-    // For new images, require a file
+    // For new items, require a file
     if (!editingItem && !selectedFile) {
-      toast.error("Please select an image to upload");
+      toast.error("Please select an image or video to upload");
       return;
     }
 
@@ -149,10 +165,12 @@ const Gallery = () => {
 
     try {
       let image_url = editingItem?.image_url || "";
+      let finalMediaType = editingItem?.media_type || mediaType;
 
-      // Upload new image if selected
+      // Upload new media if selected
       if (selectedFile) {
-        image_url = await uploadImage(selectedFile);
+        image_url = await uploadMedia(selectedFile);
+        finalMediaType = mediaType;
       }
 
       if (editingItem) {
@@ -163,9 +181,10 @@ const Gallery = () => {
           category,
           display_order,
           is_featured,
+          media_type: finalMediaType,
         }).eq("id", editingItem.id);
         if (error) throw error;
-        toast.success("Image updated successfully");
+        toast.success("Media updated successfully");
       } else {
         const { error } = await supabase.from("gallery").insert({
           title,
@@ -174,10 +193,11 @@ const Gallery = () => {
           category,
           display_order,
           is_featured,
+          media_type: finalMediaType,
           created_by: user?.id!,
         });
         if (error) throw error;
-        toast.success("Image uploaded successfully");
+        toast.success("Media uploaded successfully");
       }
 
       // Reset form state
@@ -186,6 +206,7 @@ const Gallery = () => {
       setEditingItem(null);
       setSelectedFile(null);
       setPreviewUrl(null);
+      setMediaType("image");
       fetchGallery();
     } catch (error: any) {
       toast.error("Failed to save: " + error.message);
@@ -195,11 +216,11 @@ const Gallery = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this image?")) return;
+    if (!confirm("Are you sure you want to delete this item?")) return;
     try {
       const { error } = await supabase.from("gallery").delete().eq("id", id);
       if (error) throw error;
-      toast.success("Image deleted successfully");
+      toast.success("Item deleted successfully");
       fetchGallery();
     } catch (error: any) {
       toast.error("Failed to delete: " + error.message);
@@ -209,22 +230,38 @@ const Gallery = () => {
   const resetFormState = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
+    setMediaType("image");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const categories = ["all", ...Array.from(new Set(galleryItems.map(item => item.category)))];
 
+  const MediaPreview = ({ url, type }: { url: string; type: "image" | "video" }) => {
+    if (type === "video") {
+      return (
+        <video 
+          src={url} 
+          className="w-full h-48 object-cover rounded-md"
+          controls={false}
+          muted
+        />
+      );
+    }
+    return <img src={url} alt="Preview" className="w-full h-48 object-cover rounded-md" />;
+  };
+
   const GalleryForm = ({ item }: { item?: GalleryItem }) => (
     <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
       <div>
-        <Label>Image *</Label>
+        <Label>Media *</Label>
         <div className="mt-2">
           {(previewUrl || item?.image_url) && (
-            <img 
-              src={previewUrl || item?.image_url} 
-              alt="Preview" 
-              className="w-full h-48 object-cover rounded-md mb-2"
-            />
+            <div className="mb-2">
+              <MediaPreview 
+                url={previewUrl || item?.image_url || ""} 
+                type={selectedFile ? mediaType : (item?.media_type || "image")} 
+              />
+            </div>
           )}
           <div 
             className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
@@ -232,14 +269,16 @@ const Gallery = () => {
           >
             <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              {selectedFile ? selectedFile.name : "Click to select an image"}
+              {selectedFile ? selectedFile.name : "Click to select an image or video"}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG/GIF</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Images: Max 5MB (JPG/PNG/GIF) • Videos: Max 100MB (MP4/WebM/MOV)
+            </p>
           </div>
           <input 
             ref={fileInputRef}
             type="file" 
-            accept="image/*" 
+            accept="image/*,video/*" 
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -272,7 +311,7 @@ const Gallery = () => {
             Uploading...
           </>
         ) : (
-          item ? "Save Changes" : "Upload Image"
+          item ? "Save Changes" : "Upload Media"
         )}
       </Button>
     </form>
@@ -285,12 +324,12 @@ const Gallery = () => {
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-6 text-foreground">Gallery</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Explore moments from our vibrant school community through our photo gallery.
+            Explore moments from our vibrant school community through photos and videos.
           </p>
           {isAdmin && (
             <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Upload Image
+              Upload Media
             </Button>
           )}
         </div>
@@ -312,7 +351,7 @@ const Gallery = () => {
         ) : filteredItems.length === 0 ? (
           <Card className="border-none shadow-lg">
             <CardContent className="p-16 text-center text-muted-foreground">
-              No images available in this category.
+              No media available in this category.
             </CardContent>
           </Card>
         ) : (
@@ -324,13 +363,39 @@ const Gallery = () => {
               >
                 <div 
                   className="relative aspect-[4/3] overflow-hidden cursor-pointer"
-                  onClick={() => setSelectedImage(item)}
+                  onClick={() => setSelectedMedia(item)}
                 >
-                  <img 
-                    src={item.image_url} 
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
+                  {item.media_type === "video" ? (
+                    <>
+                      <video 
+                        src={item.image_url} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        muted
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center">
+                          <Play className="h-8 w-8 text-primary-foreground ml-1" />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <img 
+                      src={item.image_url} 
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                  )}
+                  <div className="absolute top-2 left-2">
+                    {item.media_type === "video" ? (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Video className="h-3 w-3" /> Video
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Image className="h-3 w-3" /> Photo
+                      </Badge>
+                    )}
+                  </div>
                   {item.is_featured && (
                     <Badge className="absolute top-2 right-2">Featured</Badge>
                   )}
@@ -368,23 +433,36 @@ const Gallery = () => {
         )}
 
         {/* Lightbox Dialog */}
-        <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <Dialog open={!!selectedMedia} onOpenChange={() => setSelectedMedia(null)}>
           <DialogContent className="max-w-4xl">
-            {selectedImage && (
+            {selectedMedia && (
               <div className="space-y-4">
-                <img 
-                  src={selectedImage.image_url} 
-                  alt={selectedImage.title}
-                  className="w-full h-auto rounded-lg"
-                />
+                {selectedMedia.media_type === "video" ? (
+                  <video 
+                    src={selectedMedia.image_url} 
+                    className="w-full h-auto rounded-lg"
+                    controls
+                    autoPlay
+                  />
+                ) : (
+                  <img 
+                    src={selectedMedia.image_url} 
+                    alt={selectedMedia.title}
+                    className="w-full h-auto rounded-lg"
+                  />
+                )}
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">{selectedImage.title}</h2>
-                  {selectedImage.description && (
-                    <p className="text-muted-foreground">{selectedImage.description}</p>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">{selectedMedia.title}</h2>
+                  {selectedMedia.description && (
+                    <p className="text-muted-foreground">{selectedMedia.description}</p>
                   )}
                   <div className="flex gap-2 mt-4">
-                    <Badge className="capitalize">{selectedImage.category}</Badge>
-                    {selectedImage.is_featured && <Badge variant="secondary">Featured</Badge>}
+                    <Badge className="capitalize">{selectedMedia.category}</Badge>
+                    {selectedMedia.is_featured && <Badge variant="secondary">Featured</Badge>}
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      {selectedMedia.media_type === "video" ? <Video className="h-3 w-3" /> : <Image className="h-3 w-3" />}
+                      {selectedMedia.media_type === "video" ? "Video" : "Photo"}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -392,21 +470,21 @@ const Gallery = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Add Image Dialog */}
+        {/* Add Media Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) resetFormState(); }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Upload New Image</DialogTitle>
+              <DialogTitle>Upload New Media</DialogTitle>
             </DialogHeader>
             <GalleryForm />
           </DialogContent>
         </Dialog>
 
-        {/* Edit Image Dialog */}
+        {/* Edit Media Dialog */}
         <Dialog open={isDialogOpen && !!editingItem} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingItem(null); }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Image</DialogTitle>
+              <DialogTitle>Edit Media</DialogTitle>
             </DialogHeader>
             {editingItem && <GalleryForm item={editingItem} />}
           </DialogContent>
