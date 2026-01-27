@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Image, X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { heroSectionSchema } from "@/lib/validations";
+import HeroImagesManagement from "./HeroImagesManagement";
 
 interface HeroSection {
   id: string;
@@ -212,142 +213,151 @@ const HeroSectionManagement = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Hero Section Management</CardTitle>
-        <CardDescription>Update the homepage hero section content</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSave} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              name="title"
-              defaultValue={heroSection?.title || ""}
-              required
-              maxLength={100}
-              placeholder="Welcome to Our School"
-              className={errors.title ? "border-destructive" : ""}
-            />
-            {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
-          </div>
+    <div className="space-y-6">
+      {/* Banner Images Carousel Management */}
+      <HeroImagesManagement />
 
-          <div className="space-y-2">
-            <Label htmlFor="subtitle">Subtitle</Label>
-            <Input
-              id="subtitle"
-              name="subtitle"
-              defaultValue={heroSection?.subtitle || ""}
-              maxLength={200}
-              placeholder="In Pursuit of Excellence"
-              className={errors.subtitle ? "border-destructive" : ""}
-            />
-            {errors.subtitle && <p className="text-sm text-destructive">{errors.subtitle}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="button_text">Button Text *</Label>
-            <Input
-              id="button_text"
-              name="button_text"
-              defaultValue={heroSection?.button_text || "Apply Now"}
-              required
-              maxLength={50}
-              className={errors.button_text ? "border-destructive" : ""}
-            />
-            {errors.button_text && <p className="text-sm text-destructive">{errors.button_text}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="button_link">Button Link *</Label>
-            <Input
-              id="button_link"
-              name="button_link"
-              defaultValue={heroSection?.button_link || "/admissions/apply"}
-              required
-              maxLength={200}
-              placeholder="/admissions/apply or https://..."
-              className={errors.button_link ? "border-destructive" : ""}
-            />
-            <p className="text-xs text-muted-foreground">Must start with / for internal links or http for external</p>
-            {errors.button_link && <p className="text-sm text-destructive">{errors.button_link}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Background Image</Label>
-            
-            {/* Image Preview */}
-            {(previewUrl || heroSection?.background_image) && (
-              <div className="relative rounded-lg overflow-hidden border border-border">
-                <img
-                  src={previewUrl || heroSection?.background_image || ""}
-                  alt="Hero background preview"
-                  className="w-full h-48 object-cover"
-                />
-                {previewUrl && (
-                  <button
-                    type="button"
-                    onClick={clearSelectedImage}
-                    className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Upload Button */}
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="flex-1"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {uploading ? "Uploading..." : selectedImage ? "Change Image" : "Upload Image"}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
-            </div>
-            
-            {selectedImage && (
-              <p className="text-sm text-muted-foreground">
-                Selected: {selectedImage.name}
-              </p>
-            )}
-
-            {/* URL Input as alternative */}
-            <div className="pt-2">
-              <Label htmlFor="background_image" className="text-sm text-muted-foreground">
-                Or enter image URL directly
-              </Label>
+      {/* Text Content Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Hero Section Content</CardTitle>
+          <CardDescription>Update the homepage hero section text and buttons</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
               <Input
-                id="background_image"
-                name="background_image"
-                defaultValue={heroSection?.background_image || ""}
-                maxLength={500}
-                placeholder="/hero-school.jpg or https://..."
-                className={errors.background_image ? "border-destructive" : ""}
+                id="title"
+                name="title"
+                defaultValue={heroSection?.title || ""}
+                required
+                maxLength={100}
+                placeholder="Welcome to Our School"
+                className={errors.title ? "border-destructive" : ""}
               />
+              {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
             </div>
-            {errors.background_image && <p className="text-sm text-destructive">{errors.background_image}</p>}
-          </div>
 
-          <Button type="submit" disabled={saving || uploading}>
-            {(saving || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {uploading ? "Uploading..." : "Save Changes"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <div className="space-y-2">
+              <Label htmlFor="subtitle">Subtitle</Label>
+              <Input
+                id="subtitle"
+                name="subtitle"
+                defaultValue={heroSection?.subtitle || ""}
+                maxLength={200}
+                placeholder="In Pursuit of Excellence"
+                className={errors.subtitle ? "border-destructive" : ""}
+              />
+              {errors.subtitle && <p className="text-sm text-destructive">{errors.subtitle}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="button_text">Button Text *</Label>
+              <Input
+                id="button_text"
+                name="button_text"
+                defaultValue={heroSection?.button_text || "Apply Now"}
+                required
+                maxLength={50}
+                className={errors.button_text ? "border-destructive" : ""}
+              />
+              {errors.button_text && <p className="text-sm text-destructive">{errors.button_text}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="button_link">Button Link *</Label>
+              <Input
+                id="button_link"
+                name="button_link"
+                defaultValue={heroSection?.button_link || "/admissions/apply"}
+                required
+                maxLength={200}
+                placeholder="/admissions/apply or https://..."
+                className={errors.button_link ? "border-destructive" : ""}
+              />
+              <p className="text-xs text-muted-foreground">Must start with / for internal links or http for external</p>
+              {errors.button_link && <p className="text-sm text-destructive">{errors.button_link}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fallback Background Image</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                This image is used when no carousel images are uploaded
+              </p>
+              
+              {/* Image Preview */}
+              {(previewUrl || heroSection?.background_image) && (
+                <div className="relative rounded-lg overflow-hidden border border-border">
+                  <img
+                    src={previewUrl || heroSection?.background_image || ""}
+                    alt="Hero background preview"
+                    className="w-full h-48 object-cover"
+                  />
+                  {previewUrl && (
+                    <button
+                      type="button"
+                      onClick={clearSelectedImage}
+                      className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Upload Button */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex-1"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploading ? "Uploading..." : selectedImage ? "Change Image" : "Upload Image"}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+              </div>
+              
+              {selectedImage && (
+                <p className="text-sm text-muted-foreground">
+                  Selected: {selectedImage.name}
+                </p>
+              )}
+
+              {/* URL Input as alternative */}
+              <div className="pt-2">
+                <Label htmlFor="background_image" className="text-sm text-muted-foreground">
+                  Or enter image URL directly
+                </Label>
+                <Input
+                  id="background_image"
+                  name="background_image"
+                  defaultValue={heroSection?.background_image || ""}
+                  maxLength={500}
+                  placeholder="/hero-school.jpg or https://..."
+                  className={errors.background_image ? "border-destructive" : ""}
+                />
+              </div>
+              {errors.background_image && <p className="text-sm text-destructive">{errors.background_image}</p>}
+            </div>
+
+            <Button type="submit" disabled={saving || uploading}>
+              {(saving || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {uploading ? "Uploading..." : "Save Changes"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
