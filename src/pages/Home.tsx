@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Users, Award, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroImage from "@/assets/hero-school.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import HeroCarousel from "@/components/home/HeroCarousel";
 
 interface Testimonial {
   id: string;
@@ -16,22 +16,11 @@ interface Testimonial {
   avatar_url: string | null;
 }
 
-interface HeroSection {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  button_text: string;
-  button_link: string;
-  background_image: string | null;
-}
-
 const Home = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [heroData, setHeroData] = useState<HeroSection | null>(null);
 
   useEffect(() => {
     fetchTestimonials();
-    fetchHeroSection();
   }, []);
 
   const fetchTestimonials = async () => {
@@ -43,53 +32,10 @@ const Home = () => {
     if (data) setTestimonials(data);
   };
 
-  const fetchHeroSection = async () => {
-    const { data } = await supabase
-      .from("hero_section")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (data) setHeroData(data);
-  };
-
-  // Use database values or defaults
-  const heroTitle = heroData?.title || "Welcome to Elstar Mixed Educational Centre";
-  const heroSubtitle = heroData?.subtitle || "Education Is Light";
-  const heroButtonText = heroData?.button_text || "Apply Now";
-  const heroButtonLink = heroData?.button_link || "/admissions";
-  const heroBackground = heroData?.background_image || heroImage;
-
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroBackground})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70" />
-        </div>
-
-        <div className="relative container mx-auto px-4 text-center text-primary-foreground">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
-            {heroTitle}
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            {heroSubtitle}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="lg" asChild>
-              <Link to={heroButtonLink}>
-                {heroButtonText} <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button variant="secondary" size="lg" asChild>
-              <Link to="/about">Learn More</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section with Carousel */}
+      <HeroCarousel />
 
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
