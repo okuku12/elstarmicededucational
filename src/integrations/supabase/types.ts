@@ -601,6 +601,57 @@ export type Database = {
         }
         Relationships: []
       }
+      library_books: {
+        Row: {
+          author: string
+          available_quantity: number
+          category: string
+          cover_image_url: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          isbn: string | null
+          published_year: number | null
+          publisher: string | null
+          quantity: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author: string
+          available_quantity?: number
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          isbn?: string | null
+          published_year?: number | null
+          publisher?: string | null
+          quantity?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string
+          available_quantity?: number
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          isbn?: string | null
+          published_year?: number | null
+          publisher?: string | null
+          quantity?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       principal_info: {
         Row: {
           created_at: string

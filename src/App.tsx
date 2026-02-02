@@ -11,6 +11,7 @@ import Academics from "./pages/Academics";
 import Admissions from "./pages/Admissions";
 import AdmissionsForm from "./pages/AdmissionsForm";
 import Gallery from "./pages/Gallery";
+import Library from "./pages/Library";
 import NewsEvents from "./pages/NewsEvents";
 import Contact from "./pages/Contact";
 import Staff from "./pages/Staff";
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="admissions" element={<Admissions />} />
               <Route path="admissions/apply" element={<AdmissionsForm />} />
               <Route path="gallery" element={<Gallery />} />
+              <Route path="library" element={<Library />} />
               <Route path="news-events" element={<NewsEvents />} />
               <Route path="staff" element={<Staff />} />
               <Route path="contact" element={<Contact />} />
