@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ const Gallery = () => {
   const [selectedMedia, setSelectedMedia] = useState<GalleryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [mediaFilter, setMediaFilter] = useState<"all" | "image" | "video">("all");
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -47,12 +49,20 @@ const Gallery = () => {
   }, [user]);
 
   useEffect(() => {
-    if (activeCategory === "all") {
-      setFilteredItems(galleryItems);
-    } else {
-      setFilteredItems(galleryItems.filter(item => item.category === activeCategory));
+    let filtered = galleryItems;
+    
+    // Filter by category
+    if (activeCategory !== "all") {
+      filtered = filtered.filter(item => item.category === activeCategory);
     }
-  }, [activeCategory, galleryItems]);
+    
+    // Filter by media type
+    if (mediaFilter !== "all") {
+      filtered = filtered.filter(item => item.media_type === mediaFilter);
+    }
+    
+    setFilteredItems(filtered);
+  }, [activeCategory, mediaFilter, galleryItems]);
 
   const checkAdminRole = async () => {
     if (!user) {
@@ -334,16 +344,39 @@ const Gallery = () => {
           )}
         </div>
 
-        {/* Category Tabs */}
-        <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-8">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-2 md:grid-cols-5 gap-2">
-            {categories.map((category) => (
-              <TabsTrigger key={category} value={category} className="capitalize">
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8">
+          {/* Media Type Filter */}
+          <ToggleGroup 
+            type="single" 
+            value={mediaFilter} 
+            onValueChange={(value) => value && setMediaFilter(value as "all" | "image" | "video")}
+            className="border rounded-lg p-1"
+          >
+            <ToggleGroupItem value="all" className="px-4">
+              All Media
+            </ToggleGroupItem>
+            <ToggleGroupItem value="image" className="px-4 flex items-center gap-2">
+              <Image className="h-4 w-4" />
+              Photos
+            </ToggleGroupItem>
+            <ToggleGroupItem value="video" className="px-4 flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              Videos
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          {/* Category Tabs */}
+          <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+            <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {categories.map((category) => (
+                <TabsTrigger key={category} value={category} className="capitalize">
+                  {category}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
         {/* Gallery Grid */}
         {loading ? (
