@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { gallerySchema } from "@/lib/validations";
+import { Loader2, Pencil, Play, Plus, Trash2, Upload } from "lucide-react";
 
 interface GalleryItem {
   id: string;
@@ -19,6 +18,7 @@ interface GalleryItem {
   category: string;
   is_featured: boolean;
   display_order: number;
+  media_type: string;
 }
 
 const GalleryManagement = () => {
@@ -27,6 +27,10 @@ const GalleryManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchItems = async () => {
     try {
@@ -59,43 +63,101 @@ const GalleryManagement = () => {
     };
   }, []);
 
-  const handleSave = async (formData: FormData) => {
-    const rawData = {
-      title: (formData.get("title") as string || "").trim(),
-      description: (formData.get("description") as string || "").trim(),
-      image_url: (formData.get("image_url") as string || "").trim(),
-      category: (formData.get("category") as string || "").trim(),
-      is_featured: formData.get("is_featured") === "on",
-      display_order: parseInt(formData.get("display_order") as string) || 0,
-    };
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    // Validate
-    const result = gallerySchema.safeParse(rawData);
-    if (!result.success) {
-      toast.error(result.error.errors[0].message);
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      toast.error("Please select an image or video file");
       return;
     }
 
+    const maxSize = isVideo ? 100 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(`File must be less than ${isVideo ? "100MB" : "5MB"}`);
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const uploadFile = async (file: File): Promise<{ url: string; mediaType: string }> => {
+    const isVideo = file.type.startsWith("video/");
+    const bucket = isVideo ? "gallery-videos" : "gallery-images";
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", bucket);
+
+    const { data, error } = await supabase.functions.invoke("upload-image", {
+      body: formData,
+    });
+
+    if (error) throw new Error(error.message || "Upload failed");
+    if (!data?.publicUrl) throw new Error("Failed to get upload URL");
+
+    return { url: data.publicUrl, mediaType: isVideo ? "video" : "image" };
+  };
+
+  const handleSave = async (formData: FormData) => {
+    const title = (formData.get("title") as string || "").trim();
+    const description = (formData.get("description") as string || "").trim();
+    const category = (formData.get("category") as string || "").trim();
+    const is_featured = formData.get("is_featured") === "on";
+    const display_order = parseInt(formData.get("display_order") as string) || 0;
+
+    if (!title || title.length > 200) {
+      toast.error("Title is required and must be under 200 characters");
+      return;
+    }
+
+    if (!category || category.length > 50) {
+      toast.error("Category is required and must be under 50 characters");
+      return;
+    }
+
+    // For new items, file is required
+    if (!editingItem && !selectedFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+
+    setUploading(true);
+
     try {
+      let image_url = editingItem?.image_url || "";
+      let media_type = editingItem?.media_type || "image";
+
+      if (selectedFile) {
+        const result = await uploadFile(selectedFile);
+        image_url = result.url;
+        media_type = result.mediaType;
+      }
+
       if (editingItem) {
         const { error } = await supabase.from("gallery").update({
-          title: result.data.title,
-          description: result.data.description || null,
-          image_url: result.data.image_url,
-          category: result.data.category,
-          display_order: result.data.display_order,
-          is_featured: result.data.is_featured,
+          title,
+          description: description || null,
+          image_url,
+          category,
+          display_order,
+          is_featured,
+          media_type,
         }).eq("id", editingItem.id);
         if (error) throw error;
         toast.success("Gallery item updated successfully");
       } else {
         const { error } = await supabase.from("gallery").insert({
-          title: result.data.title,
-          description: result.data.description || null,
-          image_url: result.data.image_url,
-          category: result.data.category,
-          display_order: result.data.display_order,
-          is_featured: result.data.is_featured,
+          title,
+          description: description || null,
+          image_url,
+          category,
+          display_order,
+          is_featured,
+          media_type,
           created_by: user?.id!,
         });
         if (error) throw error;
@@ -104,8 +166,11 @@ const GalleryManagement = () => {
 
       setIsDialogOpen(false);
       setEditingItem(null);
+      setSelectedFile(null);
     } catch (error: any) {
       toast.error("Failed to save: " + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -121,6 +186,12 @@ const GalleryManagement = () => {
     }
   };
 
+  const resetDialog = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (editFileInputRef.current) editFileInputRef.current.value = "";
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
   }
@@ -129,16 +200,16 @@ const GalleryManagement = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Gallery Management</CardTitle>
-        <Dialog open={isDialogOpen && !editingItem} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingItem(null); }}>
+        <Dialog open={isDialogOpen && !editingItem} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingItem(null); resetDialog(); } }}>
           <DialogTrigger asChild>
             <Button onClick={() => { setEditingItem(null); setIsDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Image
+              Add Media
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Gallery Image</DialogTitle>
+              <DialogTitle>Add Gallery Media</DialogTitle>
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
               <div>
@@ -150,8 +221,29 @@ const GalleryManagement = () => {
                 <Textarea name="description" maxLength={500} />
               </div>
               <div>
-                <Label>Image URL *</Label>
-                <Input name="image_url" type="url" required maxLength={500} placeholder="https://example.com/image.jpg" />
+                <Label>Media File *</Label>
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {selectedFile ? selectedFile.name : "Choose Image or Video"}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Images: up to 5MB | Videos: up to 100MB
+                  </p>
+                </div>
               </div>
               <div>
                 <Label>Category *</Label>
@@ -165,7 +257,16 @@ const GalleryManagement = () => {
                 <input type="checkbox" name="is_featured" id="is_featured" />
                 <Label htmlFor="is_featured">Featured</Label>
               </div>
-              <Button type="submit" className="w-full">Add to Gallery</Button>
+              <Button type="submit" className="w-full" disabled={uploading}>
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  "Add to Gallery"
+                )}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -175,11 +276,22 @@ const GalleryManagement = () => {
           {items.map((item) => (
             <Card key={item.id}>
               <CardContent className="p-4">
-                <img src={item.image_url} alt={item.title} className="w-full h-48 object-cover rounded-md mb-2" />
+                <div className="relative w-full h-48 rounded-md overflow-hidden mb-2">
+                  {item.media_type === "video" ? (
+                    <>
+                      <video src={item.image_url} className="w-full h-full object-cover" muted />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="h-8 w-8 text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                  )}
+                </div>
                 <h3 className="font-semibold">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.category}</p>
+                <p className="text-sm text-muted-foreground">{item.category} • {item.media_type}</p>
                 <div className="flex gap-2 mt-2">
-                  <Dialog open={isDialogOpen && editingItem?.id === item.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingItem(null); }}>
+                  <Dialog open={isDialogOpen && editingItem?.id === item.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingItem(null); resetDialog(); } }}>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm" onClick={() => setEditingItem(item)}>
                         <Pencil className="h-4 w-4" />
@@ -199,8 +311,29 @@ const GalleryManagement = () => {
                           <Textarea name="description" defaultValue={item.description || ""} maxLength={500} />
                         </div>
                         <div>
-                          <Label>Image URL *</Label>
-                          <Input name="image_url" type="url" defaultValue={item.image_url} required maxLength={500} />
+                          <Label>Replace Media (optional)</Label>
+                          <div className="mt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => editFileInputRef.current?.click()}
+                              disabled={uploading}
+                              className="w-full"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {selectedFile ? selectedFile.name : "Choose New File"}
+                            </Button>
+                            <input
+                              ref={editFileInputRef}
+                              type="file"
+                              accept="image/*,video/*"
+                              onChange={handleFileSelect}
+                              className="hidden"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Leave empty to keep current media
+                            </p>
+                          </div>
                         </div>
                         <div>
                           <Label>Category *</Label>
@@ -214,7 +347,16 @@ const GalleryManagement = () => {
                           <input type="checkbox" name="is_featured" id={`is_featured_${item.id}`} defaultChecked={item.is_featured} />
                           <Label htmlFor={`is_featured_${item.id}`}>Featured</Label>
                         </div>
-                        <Button type="submit" className="w-full">Save Changes</Button>
+                        <Button type="submit" className="w-full" disabled={uploading}>
+                          {uploading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            "Save Changes"
+                          )}
+                        </Button>
                       </form>
                     </DialogContent>
                   </Dialog>
