@@ -36,6 +36,11 @@ const BUCKET_CONFIG: Record<string, {
     allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
     requiresAdmin: true,
   },
+  "library-pdfs": {
+    maxSizeBytes: 50 * 1024 * 1024, // 50MB for PDFs
+    allowedMimeTypes: ["application/pdf"],
+    requiresAdmin: true,
+  },
 };
 
 // Magic bytes for file validation
@@ -48,6 +53,7 @@ const FILE_MAGIC_BYTES: Record<string, number[]> = {
   "video/webm": [0x1A, 0x45, 0xDF, 0xA3], // EBML header
   "video/quicktime": [0x00, 0x00, 0x00], // MOV similar to MP4
   "video/x-msvideo": [0x52, 0x49, 0x46, 0x46], // AVI uses RIFF
+  "application/pdf": [0x25, 0x50, 0x44, 0x46], // %PDF
 };
 
 function validateMagicBytes(buffer: ArrayBuffer, mimeType: string): boolean {
@@ -113,6 +119,7 @@ function getFileExtension(mimeType: string): string {
     "video/webm": "webm",
     "video/quicktime": "mov",
     "video/x-msvideo": "avi",
+    "application/pdf": "pdf",
   };
   return map[mimeType] || "bin";
 }

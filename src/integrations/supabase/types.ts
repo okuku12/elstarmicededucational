@@ -612,6 +612,7 @@ export type Database = {
           description: string | null
           id: string
           isbn: string | null
+          pdf_url: string | null
           published_year: number | null
           publisher: string | null
           quantity: number
@@ -628,6 +629,7 @@ export type Database = {
           description?: string | null
           id?: string
           isbn?: string | null
+          pdf_url?: string | null
           published_year?: number | null
           publisher?: string | null
           quantity?: number
@@ -644,6 +646,7 @@ export type Database = {
           description?: string | null
           id?: string
           isbn?: string | null
+          pdf_url?: string | null
           published_year?: number | null
           publisher?: string | null
           quantity?: number
