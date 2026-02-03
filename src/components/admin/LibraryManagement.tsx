@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { BookOpen, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { BookOpen, FileText, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 
 interface LibraryBook {
   id: string;
@@ -18,6 +18,7 @@ interface LibraryBook {
   category: string;
   description: string | null;
   cover_image_url: string | null;
+  pdf_url: string | null;
   quantity: number;
   available_quantity: number;
   published_year: number | null;
@@ -31,9 +32,12 @@ const LibraryManagement = () => {
   const [editingBook, setEditingBook] = useState<LibraryBook | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const editPdfInputRef = useRef<HTMLInputElement>(null);
 
   const fetchBooks = async () => {
     try {
@@ -83,10 +87,27 @@ const LibraryManagement = () => {
     setSelectedFile(file);
   };
 
-  const uploadCover = async (file: File): Promise<string> => {
+  const handlePdfSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a PDF file");
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("PDF must be less than 50MB");
+      return;
+    }
+
+    setSelectedPdf(file);
+  };
+
+  const uploadFile = async (file: File, bucket: string): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("bucket", "book-covers");
+    formData.append("bucket", bucket);
 
     const { data, error } = await supabase.functions.invoke("upload-image", {
       body: formData,
@@ -133,9 +154,14 @@ const LibraryManagement = () => {
 
     try {
       let cover_image_url = editingBook?.cover_image_url || null;
+      let pdf_url = editingBook?.pdf_url || null;
 
       if (selectedFile) {
-        cover_image_url = await uploadCover(selectedFile);
+        cover_image_url = await uploadFile(selectedFile, "book-covers");
+      }
+
+      if (selectedPdf) {
+        pdf_url = await uploadFile(selectedPdf, "library-pdfs");
       }
 
       const bookData = {
@@ -145,6 +171,7 @@ const LibraryManagement = () => {
         category,
         description,
         cover_image_url,
+        pdf_url,
         quantity,
         available_quantity,
         published_year,
@@ -169,6 +196,7 @@ const LibraryManagement = () => {
       setIsDialogOpen(false);
       setEditingBook(null);
       setSelectedFile(null);
+      setSelectedPdf(null);
     } catch (error: any) {
       toast.error("Failed to save: " + error.message);
     } finally {
@@ -190,8 +218,11 @@ const LibraryManagement = () => {
 
   const resetDialog = () => {
     setSelectedFile(null);
+    setSelectedPdf(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (editFileInputRef.current) editFileInputRef.current.value = "";
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    if (editPdfInputRef.current) editPdfInputRef.current.value = "";
   };
 
   if (loading) {
@@ -248,6 +279,30 @@ const LibraryManagement = () => {
             className="hidden"
           />
           {book && <p className="text-xs text-muted-foreground mt-1">Leave empty to keep current cover</p>}
+        </div>
+      </div>
+
+      <div>
+        <Label>{book ? "Replace PDF" : "PDF File"}</Label>
+        <div className="mt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => (book ? editPdfInputRef : pdfInputRef).current?.click()}
+            disabled={uploading}
+            className="w-full"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            {selectedPdf ? selectedPdf.name : "Choose PDF"}
+          </Button>
+          <input
+            ref={book ? editPdfInputRef : pdfInputRef}
+            type="file"
+            accept="application/pdf"
+            onChange={handlePdfSelect}
+            className="hidden"
+          />
+          {book?.pdf_url && <p className="text-xs text-muted-foreground mt-1">Current PDF uploaded. Leave empty to keep it.</p>}
         </div>
       </div>
 
@@ -333,6 +388,11 @@ const LibraryManagement = () => {
                       {book.available_quantity} / {book.quantity} available
                     </span>
                   </p>
+                  {book.pdf_url && (
+                    <p className="text-xs mt-1 text-primary flex items-center gap-1">
+                      <FileText className="h-3 w-3" /> PDF available
+                    </p>
+                  )}
                   <div className="flex gap-2 mt-3">
                     <Dialog open={isDialogOpen && editingBook?.id === book.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingBook(null); resetDialog(); } }}>
                       <DialogTrigger asChild>

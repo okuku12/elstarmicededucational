@@ -4,8 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, Search } from "lucide-react";
+import { BookOpen, FileText, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface LibraryBook {
@@ -16,6 +17,7 @@ interface LibraryBook {
   category: string;
   description: string | null;
   cover_image_url: string | null;
+  pdf_url: string | null;
   quantity: number;
   available_quantity: number;
   published_year: number | null;
@@ -158,10 +160,15 @@ const Library = () => {
                   </div>
                   <h3 className="font-semibold text-sm line-clamp-2" title={book.title}>{book.title}</h3>
                   <p className="text-xs text-muted-foreground line-clamp-1">{book.author}</p>
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center gap-2">
                     <Badge variant={book.available_quantity > 0 ? "default" : "destructive"} className="text-xs">
                       {book.available_quantity > 0 ? `${book.available_quantity} available` : "Unavailable"}
                     </Badge>
+                    {book.pdf_url && (
+                      <Badge variant="secondary" className="text-xs">
+                        <FileText className="h-3 w-3 mr-1" /> PDF
+                      </Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -240,6 +247,17 @@ const Library = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Description</p>
                       <p className="text-sm">{selectedBook.description}</p>
+                    </div>
+                  )}
+
+                  {selectedBook.pdf_url && (
+                    <div className="pt-2">
+                      <Button asChild className="w-full">
+                        <a href={selectedBook.pdf_url} target="_blank" rel="noopener noreferrer">
+                          <FileText className="h-4 w-4 mr-2" />
+                          View / Download PDF
+                        </a>
+                      </Button>
                     </div>
                   )}
                 </div>
