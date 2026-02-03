@@ -123,17 +123,15 @@ const HeroCarousel = () => {
             index === currentIndex && !isTransitioning ? "opacity-100" : "opacity-0"
           }`}
           style={{ backgroundImage: `url(${image})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70" />
-        </div>
+        />
       ))}
 
       {/* Content */}
-      <div className="relative container mx-auto px-4 text-center text-primary-foreground z-10">
-        <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
+      <div className="relative container mx-auto px-4 text-center z-10">
+        <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in text-white drop-shadow-lg">
           {heroTitle}
         </h1>
-        <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
+        <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto text-white/90 drop-shadow-md">
           {heroSubtitle}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
