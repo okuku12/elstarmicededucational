@@ -63,15 +63,19 @@ const GalleryManagement = () => {
     };
   }, []);
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
+  const ALLOWED_EXTENSIONS = '.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov';
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const isImage = file.type.startsWith("image/");
-    const isVideo = file.type.startsWith("video/");
+    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+    const isVideo = ALLOWED_VIDEO_TYPES.includes(file.type);
 
     if (!isImage && !isVideo) {
-      toast.error("Please select an image or video file");
+      toast.error("Please select a valid image (JPEG, PNG, GIF, WebP) or video (MP4, WebM, MOV) file");
       return;
     }
 
@@ -236,12 +240,12 @@ const GalleryManagement = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*,video/*"
+                    accept={ALLOWED_EXTENSIONS}
                     onChange={handleFileSelect}
                     className="hidden"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Images: up to 5MB | Videos: up to 100MB
+                    Supported: JPEG, PNG, GIF, WebP (up to 5MB) | MP4, WebM, MOV (up to 100MB)
                   </p>
                 </div>
               </div>
@@ -323,16 +327,16 @@ const GalleryManagement = () => {
                               <Upload className="h-4 w-4 mr-2" />
                               {selectedFile ? selectedFile.name : "Choose New File"}
                             </Button>
-                            <input
-                              ref={editFileInputRef}
-                              type="file"
-                              accept="image/*,video/*"
-                              onChange={handleFileSelect}
-                              className="hidden"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Leave empty to keep current media
-                            </p>
+                          <input
+                            ref={editFileInputRef}
+                            type="file"
+                            accept={ALLOWED_EXTENSIONS}
+                            onChange={handleFileSelect}
+                            className="hidden"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Leave empty to keep current media
+                          </p>
                           </div>
                         </div>
                         <div>
