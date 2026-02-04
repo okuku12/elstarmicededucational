@@ -70,12 +70,15 @@ const LibraryManagement = () => {
     };
   }, []);
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const ALLOWED_IMAGE_EXTENSIONS = '.jpg,.jpeg,.png,.gif,.webp';
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Please select a valid image (JPEG, PNG, GIF, WebP)");
       return;
     }
 
@@ -274,10 +277,13 @@ const LibraryManagement = () => {
           <input
             ref={book ? editFileInputRef : fileInputRef}
             type="file"
-            accept="image/*"
+            accept={ALLOWED_IMAGE_EXTENSIONS}
             onChange={handleFileSelect}
             className="hidden"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Supported: JPEG, PNG, GIF, WebP (up to 5MB)
+          </p>
           {book && <p className="text-xs text-muted-foreground mt-1">Leave empty to keep current cover</p>}
         </div>
       </div>
