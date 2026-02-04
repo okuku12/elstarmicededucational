@@ -114,51 +114,60 @@ const HeroCarousel = () => {
   const heroButtonLink = heroData?.button_link || "/admissions";
 
   return (
-    <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
-      {/* Background Images */}
+    <section className="relative h-[700px] flex items-center justify-center overflow-hidden">
+      {/* Background Images - No overlay for clear visibility */}
       {images.map((image, index) => (
         <div
           key={image}
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+          className={`absolute inset-0 transition-opacity duration-1000 ${
             index === currentIndex && !isTransitioning ? "opacity-100" : "opacity-0"
           }`}
-          style={{ backgroundImage: `url(${image})` }}
-        />
+        >
+          <img 
+            src={image} 
+            alt="Hero background" 
+            className="w-full h-full object-cover"
+          />
+        </div>
       ))}
 
-      {/* Content */}
-      <div className="relative container mx-auto px-4 text-center z-10">
-        <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in text-white drop-shadow-lg">
-          {heroTitle}
-        </h1>
-        <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto text-white/90 drop-shadow-md">
-          {heroSubtitle}
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="hero" size="lg" asChild>
-            <Link to={heroButtonLink}>
-              {heroButtonText} <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-          <Button variant="secondary" size="lg" asChild>
-            <Link to="/about">Learn More</Link>
-          </Button>
+      {/* Content - Positioned at bottom with subtle backdrop for readability */}
+      <div className="absolute bottom-0 left-0 right-0 z-10">
+        <div className="bg-gradient-to-t from-black/70 via-black/40 to-transparent pt-20 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              {heroTitle}
+            </h1>
+            <p className="text-lg md:text-xl mb-6 max-w-2xl mx-auto text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+              {heroSubtitle}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="hero" size="lg" asChild>
+                <Link to={heroButtonLink}>
+                  {heroButtonText} <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button variant="secondary" size="lg" asChild>
+                <Link to="/about">Learn More</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows - Positioned in middle of image area */}
       {images.length > 1 && (
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-background/20 hover:bg-background/40 text-primary-foreground transition-colors"
+            className="absolute left-4 top-1/3 -translate-y-1/2 z-20 p-3 rounded-full bg-white/80 hover:bg-white text-primary shadow-lg transition-all"
             aria-label="Previous slide"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-background/20 hover:bg-background/40 text-primary-foreground transition-colors"
+            className="absolute right-4 top-1/3 -translate-y-1/2 z-20 p-3 rounded-full bg-white/80 hover:bg-white text-primary shadow-lg transition-all"
             aria-label="Next slide"
           >
             <ChevronRight className="h-6 w-6" />
@@ -168,15 +177,15 @@ const HeroCarousel = () => {
 
       {/* Dots Indicator */}
       {images.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {images.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
+              className={`w-3 h-3 rounded-full transition-all shadow-md ${
                 index === currentIndex
-                  ? "bg-primary-foreground scale-110"
-                  : "bg-primary-foreground/50 hover:bg-primary-foreground/75"
+                  ? "bg-white scale-110"
+                  : "bg-white/60 hover:bg-white/80"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
