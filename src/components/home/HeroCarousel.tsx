@@ -24,7 +24,7 @@ const HeroCarousel = () => {
   const [heroData, setHeroData] = useState<HeroSection | null>(null);
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [nextIndex, setNextIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchHeroData();
@@ -73,39 +73,43 @@ const HeroCarousel = () => {
     if (images.length <= 1) return;
 
     const interval = setInterval(() => {
-      setIsTransitioning(true);
+      const next = (currentIndex + 1) % images.length;
+      setNextIndex(next);
+      // After transition completes, update current index
       setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % images.length);
-        setIsTransitioning(false);
-      }, 500);
+        setCurrentIndex(next);
+        setNextIndex(null);
+      }, 1000);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, [images.length, currentIndex]);
 
   const goToSlide = (index: number) => {
     if (index === currentIndex) return;
-    setIsTransitioning(true);
+    setNextIndex(index);
     setTimeout(() => {
       setCurrentIndex(index);
-      setIsTransitioning(false);
-    }, 300);
+      setNextIndex(null);
+    }, 1000);
   };
 
   const goToPrevious = () => {
-    setIsTransitioning(true);
+    const prev = (currentIndex - 1 + images.length) % images.length;
+    setNextIndex(prev);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-      setIsTransitioning(false);
-    }, 300);
+      setCurrentIndex(prev);
+      setNextIndex(null);
+    }, 1000);
   };
 
   const goToNext = () => {
-    setIsTransitioning(true);
+    const next = (currentIndex + 1) % images.length;
+    setNextIndex(next);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-      setIsTransitioning(false);
-    }, 300);
+      setCurrentIndex(next);
+      setNextIndex(null);
+    }, 1000);
   };
 
   const heroTitle = heroData?.title || "Welcome to Elstar Mixed Educational Centre";
@@ -115,21 +119,28 @@ const HeroCarousel = () => {
 
   return (
     <section className="relative h-[700px] flex items-center justify-center overflow-hidden">
-      {/* Background Images - No overlay for clear visibility */}
-      {images.map((image, index) => (
+      {/* Background Images - Crossfade without white flash */}
+      {/* Current image - always visible as base layer */}
+      <div className="absolute inset-0">
+        <img 
+          src={images[currentIndex]} 
+          alt="Hero background" 
+          className="w-full h-full object-cover"
+        />
+      </div>
+      
+      {/* Next image - fades in on top when transitioning */}
+      {nextIndex !== null && (
         <div
-          key={image}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentIndex && !isTransitioning ? "opacity-100" : "opacity-0"
-          }`}
+          className="absolute inset-0 animate-[fade-in_1s_ease-out_forwards]"
         >
           <img 
-            src={image} 
+            src={images[nextIndex]} 
             alt="Hero background" 
             className="w-full h-full object-cover"
           />
         </div>
-      ))}
+      )}
 
       {/* Content - Positioned at bottom with subtle backdrop for readability */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
