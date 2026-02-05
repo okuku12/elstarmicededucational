@@ -86,9 +86,6 @@ const Navigation = () => {
     path: "/admissions",
     label: "Admissions"
   }, {
-    path: "/staff",
-    label: "Staff"
-  }, {
     path: "/gallery",
     label: "Gallery"
   }, {
