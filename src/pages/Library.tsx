@@ -6,8 +6,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, FileText, Search } from "lucide-react";
+import { BookOpen, FileText, Search, AlertTriangle, Download } from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface LibraryBook {
   id: string;
@@ -32,6 +33,40 @@ const Library = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [categories, setCategories] = useState<string[]>(["all"]);
   const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
+  const [pdfError, setPdfError] = useState(false);
+
+  const handleOpenPdf = (url: string) => {
+    // Try opening in a new tab
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+    
+    // Check if popup was blocked or if there might be an issue
+    if (!newWindow || newWindow.closed) {
+      setPdfError(true);
+      toast.error("Unable to open PDF. Try disabling your ad blocker or download directly.");
+    }
+  };
+
+  const handleDownloadPdf = async (url: string, title: string) => {
+    try {
+      toast.info("Starting download...");
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Download failed");
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${title.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success("Download started!");
+    } catch (error) {
+      toast.error("Download failed. Please try disabling your ad blocker.");
+      setPdfError(true);
+    }
+  };
 
   const fetchBooks = async () => {
     try {
@@ -251,13 +286,30 @@ const Library = () => {
                   )}
 
                   {selectedBook.pdf_url && (
-                    <div className="pt-2">
-                      <Button asChild className="w-full">
-                        <a href={selectedBook.pdf_url} target="_blank" rel="noopener noreferrer">
+                    <div className="pt-2 space-y-3">
+                      {pdfError && (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            If the PDF doesn't open, please disable your ad blocker for this site or try the download button.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleOpenPdf(selectedBook.pdf_url!)} 
+                          className="flex-1"
+                        >
                           <FileText className="h-4 w-4 mr-2" />
-                          View / Download PDF
-                        </a>
-                      </Button>
+                          View PDF
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => handleDownloadPdf(selectedBook.pdf_url!, selectedBook.title)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
