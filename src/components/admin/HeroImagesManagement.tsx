@@ -22,6 +22,9 @@ const HeroImagesManagement = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const ALLOWED_IMAGE_EXTENSIONS = '.jpg,.jpeg,.png,.gif,.webp';
+
   useEffect(() => {
     fetchHeroImages();
   }, []);
@@ -77,10 +80,10 @@ const HeroImagesManagement = () => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
-        if (!file.type.startsWith("image/")) {
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
           toast({
             title: "Invalid file",
-            description: `${file.name} is not an image`,
+            description: `${file.name} is not a valid image (JPEG, PNG, GIF, WebP only)`,
             variant: "destructive",
           });
           continue;
@@ -251,13 +254,13 @@ const HeroImagesManagement = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept={ALLOWED_IMAGE_EXTENSIONS}
             multiple
             onChange={handleImageUpload}
             className="hidden"
           />
           <p className="text-sm text-muted-foreground mt-2">
-            You can upload multiple images at once. Max 10MB per image.
+            Supported: JPEG, PNG, GIF, WebP (max 10MB per image)
           </p>
         </div>
 

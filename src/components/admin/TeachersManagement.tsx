@@ -173,13 +173,16 @@ const TeachersManagement = () => {
     }
   };
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const ALLOWED_IMAGE_EXTENSIONS = '.jpg,.jpeg,.png,.gif,.webp';
+
   const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Please select a valid image (JPEG, PNG, GIF, WebP)");
       return;
     }
 
@@ -519,12 +522,12 @@ const TeachersManagement = () => {
                 <Input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept={ALLOWED_IMAGE_EXTENSIONS}
                   onChange={handlePhotoSelect}
                   className="cursor-pointer"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Accepted formats: JPG, PNG, GIF. Max size: 5MB
+                  Supported: JPEG, PNG, GIF, WebP (max 5MB)
                 </p>
               </div>
 
