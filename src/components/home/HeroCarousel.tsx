@@ -155,19 +155,9 @@ const HeroCarousel = () => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               {heroTitle}
             </h1>
-            <p className="text-lg md:text-xl mb-6 max-w-2xl mx-auto text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+            <p className="text-lg md:text-xl max-w-2xl mx-auto text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
               {heroSubtitle}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="hero" size="lg" asChild>
-                <Link to={heroButtonLink}>
-                  {heroButtonText} <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="secondary" size="lg" asChild>
-                <Link to="/about">Learn More</Link>
-              </Button>
-            </div>
           </div>
         </div>
       </div>
