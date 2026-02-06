@@ -230,8 +230,9 @@ const StudentsManagement = () => {
                 </Select>
               </div>
               <div>
-                <Label>Student ID *</Label>
-                <Input name="student_id" placeholder="e.g., STU001" required />
+                <Label>Admission Number *</Label>
+                <Input name="student_id" placeholder="e.g., ADM2024001" required />
+                <p className="text-xs text-muted-foreground mt-1">Unique admission number for this student</p>
               </div>
               <div>
                 <Label>Class</Label>
@@ -291,7 +292,7 @@ const StudentsManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student ID</TableHead>
+                <TableHead>Admission No.</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Class</TableHead>
                 <TableHead>Parent</TableHead>
@@ -308,7 +309,7 @@ const StudentsManagement = () => {
               ) : (
                 students.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell>{student.student_id}</TableCell>
+                    <TableCell className="font-mono font-medium">{student.student_id}</TableCell>
                     <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
                     <TableCell>{classes.find((c) => c.id === student.class_id)?.name || "Not assigned"}</TableCell>
                     <TableCell>{student.parent_name || "N/A"}</TableCell>
@@ -326,8 +327,9 @@ const StudentsManagement = () => {
                             </DialogHeader>
                             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
                               <div>
-                                <Label>Student ID</Label>
+                                <Label>Admission Number *</Label>
                                 <Input name="student_id" defaultValue={student.student_id} required />
+                                <p className="text-xs text-muted-foreground mt-1">Unique admission number for this student</p>
                               </div>
                               <div>
                                 <Label>Class</Label>

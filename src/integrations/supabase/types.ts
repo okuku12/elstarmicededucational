@@ -293,6 +293,7 @@ export type Database = {
       classes: {
         Row: {
           academic_year: string
+          class_code: string | null
           class_teacher_id: string | null
           created_at: string | null
           grade_level: number
@@ -303,6 +304,7 @@ export type Database = {
         }
         Insert: {
           academic_year: string
+          class_code?: string | null
           class_teacher_id?: string | null
           created_at?: string | null
           grade_level: number
@@ -313,6 +315,7 @@ export type Database = {
         }
         Update: {
           academic_year?: string
+          class_code?: string | null
           class_teacher_id?: string | null
           created_at?: string | null
           grade_level?: number

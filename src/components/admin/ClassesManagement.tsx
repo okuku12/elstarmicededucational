@@ -12,6 +12,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 interface Class {
   id: string;
   name: string;
+  class_code: string | null;
   grade_level: number;
   section: string | null;
   academic_year: string;
@@ -56,8 +57,17 @@ const ClassesManagement = () => {
 
   const handleSave = async (formData: FormData) => {
     try {
+      const classCode = (formData.get("class_code") as string || "").toUpperCase().trim();
+      
+      // Validate class_code format (letters followed by digits)
+      if (classCode && !/^[A-Z]+[0-9]+$/.test(classCode)) {
+        toast.error("Class Code must be letters followed by digits (e.g., CLASS01, GR10)");
+        return;
+      }
+
       const data = {
         name: formData.get("name") as string,
+        class_code: classCode || null,
         grade_level: parseInt(formData.get("grade_level") as string),
         section: formData.get("section") as string || null,
         academic_year: formData.get("academic_year") as string,
@@ -113,11 +123,16 @@ const ClassesManagement = () => {
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
               <div>
-                <Label>Class Name</Label>
+                <Label>Class Code *</Label>
+                <Input name="class_code" placeholder="e.g., CLASS01, GR10" required />
+                <p className="text-xs text-muted-foreground mt-1">Unique ID: Letters followed by digits (e.g., CLASS01)</p>
+              </div>
+              <div>
+                <Label>Class Name *</Label>
                 <Input name="name" placeholder="e.g., Grade 10-A" required />
               </div>
               <div>
-                <Label>Grade Level</Label>
+                <Label>Grade Level *</Label>
                 <Input name="grade_level" type="number" min="1" max="12" required />
               </div>
               <div>
@@ -125,7 +140,7 @@ const ClassesManagement = () => {
                 <Input name="section" placeholder="e.g., A, B, C" />
               </div>
               <div>
-                <Label>Academic Year</Label>
+                <Label>Academic Year *</Label>
                 <Input name="academic_year" placeholder="e.g., 2024-2025" required />
               </div>
               <Button type="submit" className="w-full">Create Class</Button>
@@ -138,6 +153,7 @@ const ClassesManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Class Code</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Grade Level</TableHead>
                 <TableHead>Section</TableHead>
@@ -148,6 +164,7 @@ const ClassesManagement = () => {
             <TableBody>
               {classes.map((cls) => (
                 <TableRow key={cls.id}>
+                  <TableCell className="font-mono font-medium">{cls.class_code || "N/A"}</TableCell>
                   <TableCell>{cls.name}</TableCell>
                   <TableCell>{cls.grade_level}</TableCell>
                   <TableCell>{cls.section || "N/A"}</TableCell>
@@ -166,11 +183,16 @@ const ClassesManagement = () => {
                           </DialogHeader>
                           <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget)); }} className="space-y-4">
                             <div>
-                              <Label>Class Name</Label>
+                              <Label>Class Code *</Label>
+                              <Input name="class_code" defaultValue={cls.class_code || ""} required />
+                              <p className="text-xs text-muted-foreground mt-1">Unique ID: Letters followed by digits (e.g., CLASS01)</p>
+                            </div>
+                            <div>
+                              <Label>Class Name *</Label>
                               <Input name="name" defaultValue={cls.name} required />
                             </div>
                             <div>
-                              <Label>Grade Level</Label>
+                              <Label>Grade Level *</Label>
                               <Input name="grade_level" type="number" min="1" max="12" defaultValue={cls.grade_level} required />
                             </div>
                             <div>
@@ -178,7 +200,7 @@ const ClassesManagement = () => {
                               <Input name="section" defaultValue={cls.section || ""} />
                             </div>
                             <div>
-                              <Label>Academic Year</Label>
+                              <Label>Academic Year *</Label>
                               <Input name="academic_year" defaultValue={cls.academic_year} required />
                             </div>
                             <Button type="submit" className="w-full">Save Changes</Button>
