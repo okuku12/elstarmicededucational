@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage from "@/assets/hero-school.jpg";
 
 interface HeroSection {
   id: string;
@@ -51,22 +50,23 @@ const HeroCarousel = () => {
 
   // Get all images to cycle through
   const getAllImages = useCallback(() => {
-    const images: string[] = [];
+    const imgs: string[] = [];
     
     // Add carousel images first
     heroImages.forEach((img) => {
-      images.push(img.image_url);
+      imgs.push(img.image_url);
     });
     
-    // If no carousel images, use the main background or default
-    if (images.length === 0) {
-      images.push(heroData?.background_image || heroImage);
+    // If no carousel images, use the main background if available
+    if (imgs.length === 0 && heroData?.background_image) {
+      imgs.push(heroData.background_image);
     }
     
-    return images;
+    return imgs;
   }, [heroImages, heroData]);
 
   const images = getAllImages();
+  const hasImages = images.length > 0;
 
   // Auto-advance carousel
   useEffect(() => {
@@ -119,27 +119,33 @@ const HeroCarousel = () => {
 
   return (
     <section className="relative h-[700px] flex items-center justify-center overflow-hidden">
-      {/* Background Images - Crossfade without white flash */}
-      {/* Current image - always visible as base layer */}
-      <div className="absolute inset-0">
-        <img 
-          src={images[currentIndex]} 
-          alt="Hero background" 
-          className="w-full h-full object-cover"
-        />
-      </div>
-      
-      {/* Next image - fades in on top when transitioning */}
-      {nextIndex !== null && (
-        <div
-          className="absolute inset-0 animate-[fade-in_1s_ease-out_forwards]"
-        >
-          <img 
-            src={images[nextIndex]} 
-            alt="Hero background" 
-            className="w-full h-full object-cover"
-          />
-        </div>
+      {/* Background - Gradient fallback or Images with crossfade */}
+      {!hasImages ? (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/80 to-primary/60" />
+      ) : (
+        <>
+          {/* Current image - always visible as base layer */}
+          <div className="absolute inset-0">
+            <img 
+              src={images[currentIndex]} 
+              alt="Hero background" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          
+          {/* Next image - fades in on top when transitioning */}
+          {nextIndex !== null && (
+            <div
+              className="absolute inset-0 animate-[fade-in_1s_ease-out_forwards]"
+            >
+              <img 
+                src={images[nextIndex]} 
+                alt="Hero background" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Content - Positioned at bottom with subtle backdrop for readability */}
@@ -167,7 +173,7 @@ const HeroCarousel = () => {
       </div>
 
       {/* Navigation Arrows - Positioned in middle of image area */}
-      {images.length > 1 && (
+      {hasImages && images.length > 1 && (
         <>
           <button
             onClick={goToPrevious}
@@ -187,7 +193,7 @@ const HeroCarousel = () => {
       )}
 
       {/* Dots Indicator */}
-      {images.length > 1 && (
+      {hasImages && images.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {images.map((_, index) => (
             <button
