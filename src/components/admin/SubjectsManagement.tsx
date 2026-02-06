@@ -113,12 +113,13 @@ const SubjectsManagement = () => {
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget), true); }} className="space-y-4">
               <div>
-                <Label>Subject Name *</Label>
-                <Input name="name" placeholder="e.g., Mathematics" required />
+                <Label>Subject Code *</Label>
+                <Input name="code" placeholder="e.g., MATH101, ENG201" required />
+                <p className="text-xs text-muted-foreground mt-1">Unique identifier for this subject</p>
               </div>
               <div>
-                <Label>Subject Code *</Label>
-                <Input name="code" placeholder="e.g., MATH101" required />
+                <Label>Subject Name *</Label>
+                <Input name="name" placeholder="e.g., Mathematics" required />
               </div>
               <div>
                 <Label>Description</Label>
@@ -167,12 +168,13 @@ const SubjectsManagement = () => {
                             </DialogHeader>
                             <form onSubmit={(e) => { e.preventDefault(); handleSave(new FormData(e.currentTarget), false); }} className="space-y-4">
                               <div>
-                                <Label>Subject Name *</Label>
-                                <Input name="name" defaultValue={subject.name} required />
-                              </div>
-                              <div>
                                 <Label>Subject Code *</Label>
                                 <Input name="code" defaultValue={subject.code} required />
+                                <p className="text-xs text-muted-foreground mt-1">Unique identifier for this subject</p>
+                              </div>
+                              <div>
+                                <Label>Subject Name *</Label>
+                                <Input name="name" defaultValue={subject.name} required />
                               </div>
                               <div>
                                 <Label>Description</Label>
