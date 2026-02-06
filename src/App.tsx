@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import NotFound from "./pages/NotFound";
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -42,7 +43,12 @@ const App = () => (
               <Route path="admissions" element={<Admissions />} />
               <Route path="admissions/apply" element={<AdmissionsForm />} />
               <Route path="gallery" element={<Gallery />} />
-              <Route path="library" element={<Library />} />
+              <Route path="library" element={
+                <RoleProtectedRoute allowedRoles={["admin", "teacher", "student"]}>
+                  <Library />
+                </RoleProtectedRoute>
+              } />
+              
               <Route path="news-events" element={<NewsEvents />} />
               <Route path="staff" element={<Staff />} />
               <Route path="contact" element={<Contact />} />
