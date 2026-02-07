@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2 } from "lucide-react";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
 import ClassesManagement from "@/components/admin/ClassesManagement";
@@ -17,6 +17,7 @@ import AnnouncementsManagement from "@/components/admin/AnnouncementsManagement"
 import EventsManagement from "@/components/admin/EventsManagement";
 import PrincipalManagement from "@/components/admin/PrincipalManagement";
 import LibraryManagement from "@/components/admin/LibraryManagement";
+import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -83,7 +84,7 @@ const AdminDashboard = () => {
       </Card>
 
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 h-auto gap-1">
+        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-13 h-auto gap-1">
           <TabsTrigger value="hero" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
             <span className="hidden sm:inline">Hero</span>
@@ -111,6 +112,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="subjects" className="flex items-center gap-2">
             <Book className="h-4 w-4" />
             <span className="hidden sm:inline">Subjects</span>
+          </TabsTrigger>
+          <TabsTrigger value="class-subjects" className="flex items-center gap-2">
+            <Link2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Link</span>
           </TabsTrigger>
           <TabsTrigger value="assignments" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -160,6 +165,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="subjects">
           <SubjectsManagement />
+        </TabsContent>
+
+        <TabsContent value="class-subjects">
+          <ClassSubjectsManagement />
         </TabsContent>
 
         <TabsContent value="assignments">
