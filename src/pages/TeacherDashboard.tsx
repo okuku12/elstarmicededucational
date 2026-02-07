@@ -8,6 +8,7 @@ import { BookOpen, Users, FileText, Calendar } from "lucide-react";
 import ClassesManagement from "@/components/admin/ClassesManagement";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
+import AssignmentsList from "@/components/assignments/AssignmentsList";
 
 const TeacherDashboard = () => {
   const { user, loading } = useAuth();
@@ -99,7 +100,21 @@ const TeacherDashboard = () => {
         </TabsContent>
 
         <TabsContent value="assignments">
-          <AssignmentsManagement />
+          <Tabs defaultValue="manage" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="manage">Manage Assignments</TabsTrigger>
+              <TabsTrigger value="view">View All Assignments</TabsTrigger>
+            </TabsList>
+            <TabsContent value="manage">
+              <AssignmentsManagement />
+            </TabsContent>
+            <TabsContent value="view">
+              <AssignmentsList 
+                title="All Assignments" 
+                description="Browse and filter all assignments by class or subject" 
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="attendance">
