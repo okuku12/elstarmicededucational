@@ -40,6 +40,7 @@ const TeachersManagement = () => {
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
   const [selectedTeacherForPhoto, setSelectedTeacherForPhoto] = useState<Teacher | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [userSearchQuery, setUserSearchQuery] = useState<string>("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -307,16 +308,29 @@ const TeachersManagement = () => {
                     <SelectValue placeholder="Select a user" />
                   </SelectTrigger>
                   <SelectContent>
+                    <div className="p-2">
+                      <Input
+                        placeholder="Search by name..."
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        className="mb-2"
+                      />
+                    </div>
                     {availableProfiles.length === 0 ? (
                       <div className="p-2 text-sm text-muted-foreground">
                         No available users. All users are already teachers.
                       </div>
                     ) : (
-                      availableProfiles.map((profile) => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {profile.full_name} ({profile.email})
-                        </SelectItem>
-                      ))
+                      availableProfiles
+                        .filter((p) =>
+                          p.full_name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                          p.email.toLowerCase().includes(userSearchQuery.toLowerCase())
+                        )
+                        .map((profile) => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {profile.full_name} ({profile.email})
+                          </SelectItem>
+                        ))
                     )}
                   </SelectContent>
                 </Select>

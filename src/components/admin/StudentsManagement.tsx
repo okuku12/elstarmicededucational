@@ -46,6 +46,7 @@ const StudentsManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [userSearchQuery, setUserSearchQuery] = useState<string>("");
 
   const fetchData = async () => {
     try {
@@ -215,16 +216,29 @@ const StudentsManagement = () => {
                     <SelectValue placeholder="Select a user" />
                   </SelectTrigger>
                   <SelectContent>
+                    <div className="p-2">
+                      <Input
+                        placeholder="Search by name..."
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        className="mb-2"
+                      />
+                    </div>
                     {availableProfiles.length === 0 ? (
                       <div className="p-2 text-sm text-muted-foreground">
                         No available users. All users are already students.
                       </div>
                     ) : (
-                      availableProfiles.map((profile) => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {profile.full_name} ({profile.email})
-                        </SelectItem>
-                      ))
+                      availableProfiles
+                        .filter((p) =>
+                          p.full_name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                          p.email.toLowerCase().includes(userSearchQuery.toLowerCase())
+                        )
+                        .map((profile) => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {profile.full_name} ({profile.email})
+                          </SelectItem>
+                        ))
                     )}
                   </SelectContent>
                 </Select>
