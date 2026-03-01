@@ -88,11 +88,11 @@ const Navigation = () => {
   }, {
     path: "/gallery",
     label: "Gallery"
-  }, {
+  }, ...(userRole === "admin" || userRole === "teacher" || userRole === "student" ? [{
     path: "/library",
     label: "Library",
     icon: BookOpen
-  }, {
+  }] : []), {
     path: "/news-events",
     label: "News & Events"
   }, {
