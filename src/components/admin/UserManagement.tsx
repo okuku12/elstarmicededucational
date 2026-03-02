@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { UserCog, Shield, GraduationCap, User, Users, UserPlus } from "lucide-react";
+import { UserCog, Shield, GraduationCap, User, Users, UserPlus, Pencil, Trash2, KeyRound } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -50,6 +50,19 @@ const UserManagement = () => {
   const [createRole, setCreateRole] = useState("");
   const [createClassId, setCreateClassId] = useState("");
   const [creating, setCreating] = useState(false);
+
+  // Edit user state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editUser, setEditUser] = useState<UserProfile | null>(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Reset password state
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [resetUser, setResetUser] = useState<UserProfile | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -103,14 +116,6 @@ const UserManagement = () => {
 
     setCreating(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-
-      if (!token) {
-        toast.error("You must be logged in");
-        return;
-      }
-
       const response = await supabase.functions.invoke("create-user", {
         body: {
           fullName: createFullName.trim(),
@@ -121,14 +126,9 @@ const UserManagement = () => {
         },
       });
 
-      if (response.error) {
-        throw new Error(response.error.message || "Failed to create user");
-      }
-
+      if (response.error) throw new Error(response.error.message || "Failed to create user");
       const result = response.data;
-      if (result.error) {
-        throw new Error(result.error);
-      }
+      if (result.error) throw new Error(result.error);
 
       toast.success(`User "${createFullName}" created successfully with ${createRole} role`);
       setIsCreateDialogOpen(false);
@@ -137,12 +137,97 @@ const UserManagement = () => {
       setCreatePassword("");
       setCreateRole("");
       setCreateClassId("");
-      // Refresh data after a brief delay for the trigger to create profile
       setTimeout(() => fetchData(), 1000);
     } catch (error: any) {
       toast.error("Failed to create user: " + error.message);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleEditUser = async () => {
+    if (!editUser || !editFullName || !editEmail) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await supabase.functions.invoke("manage-user", {
+        body: {
+          action: "update",
+          userId: editUser.id,
+          fullName: editFullName.trim(),
+          email: editEmail.trim(),
+        },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      const result = response.data;
+      if (result.error) throw new Error(result.error);
+
+      toast.success("User updated successfully");
+      setIsEditDialogOpen(false);
+      setEditUser(null);
+      fetchData();
+    } catch (error: any) {
+      toast.error("Failed to update user: " + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetUser || !newPassword) {
+      toast.error("Please enter a new password");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const response = await supabase.functions.invoke("manage-user", {
+        body: {
+          action: "resetPassword",
+          userId: resetUser.id,
+          password: newPassword,
+        },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      const result = response.data;
+      if (result.error) throw new Error(result.error);
+
+      toast.success(`Password reset for ${resetUser.full_name}`);
+      setIsResetDialogOpen(false);
+      setResetUser(null);
+      setNewPassword("");
+    } catch (error: any) {
+      toast.error("Failed to reset password: " + error.message);
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const handleDeleteUser = async (user: UserProfile) => {
+    if (!confirm(`Are you sure you want to permanently delete "${user.full_name}" (${user.email})? This cannot be undone.`)) return;
+
+    try {
+      const response = await supabase.functions.invoke("manage-user", {
+        body: { action: "delete", userId: user.id },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      const result = response.data;
+      if (result.error) throw new Error(result.error);
+
+      toast.success("User deleted successfully");
+      fetchData();
+    } catch (error: any) {
+      toast.error("Failed to delete user: " + error.message);
     }
   };
 
@@ -275,7 +360,7 @@ const UserManagement = () => {
         <div>
           <CardTitle>User Management</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Create users, assign and manage roles
+            Create, edit, delete users and manage roles
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -297,79 +382,41 @@ const UserManagement = () => {
               <div className="space-y-4 py-2">
                 <div>
                   <Label>Full Name *</Label>
-                  <Input
-                    value={createFullName}
-                    onChange={(e) => setCreateFullName(e.target.value)}
-                    placeholder="Enter full name"
-                  />
+                  <Input value={createFullName} onChange={(e) => setCreateFullName(e.target.value)} placeholder="Enter full name" />
                 </div>
                 <div>
                   <Label>Email *</Label>
-                  <Input
-                    type="email"
-                    value={createEmail}
-                    onChange={(e) => setCreateEmail(e.target.value)}
-                    placeholder="Enter email address"
-                  />
+                  <Input type="email" value={createEmail} onChange={(e) => setCreateEmail(e.target.value)} placeholder="Enter email address" />
                 </div>
                 <div>
                   <Label>Password *</Label>
-                  <Input
-                    type="password"
-                    value={createPassword}
-                    onChange={(e) => setCreatePassword(e.target.value)}
-                    placeholder="Min 6 characters"
-                  />
+                  <Input type="password" value={createPassword} onChange={(e) => setCreatePassword(e.target.value)} placeholder="Min 6 characters" />
                 </div>
                 <div>
                   <Label>Role *</Label>
                   <Select value={createRole} onValueChange={setCreateRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4" /> Admin
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="teacher">
-                        <div className="flex items-center gap-2">
-                          <GraduationCap className="h-4 w-4" /> Teacher
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="student">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" /> Student
-                        </div>
-                      </SelectItem>
+                      <SelectItem value="admin"><div className="flex items-center gap-2"><Shield className="h-4 w-4" /> Admin</div></SelectItem>
+                      <SelectItem value="teacher"><div className="flex items-center gap-2"><GraduationCap className="h-4 w-4" /> Teacher</div></SelectItem>
+                      <SelectItem value="student"><div className="flex items-center gap-2"><User className="h-4 w-4" /> Student</div></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
                 {createRole === "student" && (
                   <div>
                     <Label>Assign Class</Label>
                     <Select value={createClassId} onValueChange={setCreateClassId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select class (optional)" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Select class (optional)" /></SelectTrigger>
                       <SelectContent>
                         {classes.map((cls) => (
-                          <SelectItem key={cls.id} value={cls.id}>
-                            {cls.name}
-                          </SelectItem>
+                          <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 )}
-
-                <Button
-                  onClick={handleCreateUser}
-                  className="w-full"
-                  disabled={creating || !createFullName || !createEmail || !createPassword || !createRole}
-                >
+                <Button onClick={handleCreateUser} className="w-full" disabled={creating || !createFullName || !createEmail || !createPassword || !createRole}>
                   {creating ? "Creating..." : "Create User"}
                 </Button>
               </div>
@@ -387,63 +434,31 @@ const UserManagement = () => {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Bulk Assign Role</DialogTitle>
-                  <DialogDescription>
-                    Assign a role to {selectedUsers.size} selected user(s)
-                  </DialogDescription>
+                  <DialogDescription>Assign a role to {selectedUsers.size} selected user(s)</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Select Role</label>
                     <Select value={bulkRole} onValueChange={setBulkRole}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a role to assign" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Choose a role to assign" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">
-                          <div className="flex items-center gap-2">
-                            <Shield className="h-4 w-4" /> Admin - Full system access
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="teacher">
-                          <div className="flex items-center gap-2">
-                            <GraduationCap className="h-4 w-4" /> Teacher - Manage classes and students
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="student">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" /> Student - Access to assignments and grades
-                          </div>
-                        </SelectItem>
+                        <SelectItem value="admin"><div className="flex items-center gap-2"><Shield className="h-4 w-4" /> Admin</div></SelectItem>
+                        <SelectItem value="teacher"><div className="flex items-center gap-2"><GraduationCap className="h-4 w-4" /> Teacher</div></SelectItem>
+                        <SelectItem value="student"><div className="flex items-center gap-2"><User className="h-4 w-4" /> Student</div></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="bg-muted p-3 rounded-md">
                     <p className="text-sm font-medium mb-2">Selected Users:</p>
                     <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {users
-                        .filter((u) => selectedUsers.has(u.id))
-                        .map((user) => (
-                          <div key={user.id} className="text-sm text-muted-foreground">
-                            • {user.full_name} ({user.email})
-                          </div>
-                        ))}
+                      {users.filter((u) => selectedUsers.has(u.id)).map((user) => (
+                        <div key={user.id} className="text-sm text-muted-foreground">• {user.full_name} ({user.email})</div>
+                      ))}
                     </div>
                   </div>
-
                   <div className="flex gap-2">
-                    <Button onClick={handleBulkAssign} className="flex-1">
-                      Assign Role to All
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedUsers(new Set());
-                        setIsBulkDialogOpen(false);
-                      }}
-                    >
-                      Clear Selection
-                    </Button>
+                    <Button onClick={handleBulkAssign} className="flex-1">Assign Role to All</Button>
+                    <Button variant="outline" onClick={() => { setSelectedUsers(new Set()); setIsBulkDialogOpen(false); }}>Clear</Button>
                   </div>
                 </div>
               </DialogContent>
@@ -452,15 +467,56 @@ const UserManagement = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) setEditUser(null); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>Update user details.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div>
+                <Label>Full Name *</Label>
+                <Input value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+              </div>
+              <div>
+                <Label>Email *</Label>
+                <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+              </div>
+              <Button onClick={handleEditUser} className="w-full" disabled={saving || !editFullName || !editEmail}>
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reset Password Dialog */}
+        <Dialog open={isResetDialogOpen} onOpenChange={(open) => { setIsResetDialogOpen(open); if (!open) { setResetUser(null); setNewPassword(""); } }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Reset Password</DialogTitle>
+              <DialogDescription>
+                Set a new password for {resetUser?.full_name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div>
+                <Label>New Password *</Label>
+                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" />
+              </div>
+              <Button onClick={handleResetPassword} className="w-full" disabled={resetting || newPassword.length < 6}>
+                {resetting ? "Resetting..." : "Reset Password"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedUsers.size === users.length && users.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                  />
+                  <Checkbox checked={selectedUsers.size === users.length && users.length > 0} onCheckedChange={toggleSelectAll} />
                 </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
@@ -477,10 +533,7 @@ const UserManagement = () => {
                 return (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <Checkbox
-                        checked={selectedUsers.has(user.id)}
-                        onCheckedChange={() => toggleUserSelection(user.id)}
-                      />
+                      <Checkbox checked={selectedUsers.has(user.id)} onCheckedChange={() => toggleUserSelection(user.id)} />
                     </TableCell>
                     <TableCell className="font-medium">{user.full_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -490,20 +543,10 @@ const UserManagement = () => {
                           roles.map((role, idx) => {
                             const roleObj = userRoleObjects.find((r) => r.role === role);
                             return (
-                              <Badge
-                                key={idx}
-                                variant={getRoleVariant(role)}
-                                className="flex items-center gap-1"
-                              >
+                              <Badge key={idx} variant={getRoleVariant(role)} className="flex items-center gap-1">
                                 {getRoleIcon(role)}
                                 {role}
-                                <button
-                                  onClick={() => roleObj && handleRemoveRole(user.id, roleObj.id)}
-                                  className="ml-1 hover:text-destructive"
-                                  title="Remove role"
-                                >
-                                  ×
-                                </button>
+                                <button onClick={() => roleObj && handleRemoveRole(user.id, roleObj.id)} className="ml-1 hover:text-destructive" title="Remove role">×</button>
                               </Badge>
                             );
                           })
@@ -514,73 +557,83 @@ const UserManagement = () => {
                     </TableCell>
                     <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Dialog
-                        open={isDialogOpen && selectedUser?.id === user.id}
-                        onOpenChange={(open) => {
-                          setIsDialogOpen(open);
-                          if (!open) {
-                            setSelectedUser(null);
-                            setSelectedRole("");
-                          }
-                        }}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedUser(user)}
-                          >
-                            <UserCog className="h-4 w-4 mr-2" />
-                            Assign Role
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Assign Role to {user.full_name}</DialogTitle>
-                            <DialogDescription>
-                              Select a role to assign to this user. Users can have multiple roles.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Select Role</label>
+                      <div className="flex gap-1 flex-wrap">
+                        {/* Assign Role */}
+                        <Dialog
+                          open={isDialogOpen && selectedUser?.id === user.id}
+                          onOpenChange={(open) => {
+                            setIsDialogOpen(open);
+                            if (!open) { setSelectedUser(null); setSelectedRole(""); }
+                          }}
+                        >
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedUser(user)} title="Assign role">
+                              <UserCog className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Assign Role to {user.full_name}</DialogTitle>
+                              <DialogDescription>Select a role to assign.</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
                               <Select value={selectedRole} onValueChange={setSelectedRole}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Choose a role" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Choose a role" /></SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="admin">
-                                    <div className="flex items-center gap-2">
-                                      <Shield className="h-4 w-4" /> Admin - Full system access
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="teacher">
-                                    <div className="flex items-center gap-2">
-                                      <GraduationCap className="h-4 w-4" /> Teacher - Manage classes and students
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="student">
-                                    <div className="flex items-center gap-2">
-                                      <User className="h-4 w-4" /> Student - Access to assignments and grades
-                                    </div>
-                                  </SelectItem>
+                                  <SelectItem value="admin"><div className="flex items-center gap-2"><Shield className="h-4 w-4" /> Admin</div></SelectItem>
+                                  <SelectItem value="teacher"><div className="flex items-center gap-2"><GraduationCap className="h-4 w-4" /> Teacher</div></SelectItem>
+                                  <SelectItem value="student"><div className="flex items-center gap-2"><User className="h-4 w-4" /> Student</div></SelectItem>
                                 </SelectContent>
                               </Select>
+                              <div className="bg-muted p-3 rounded-md">
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>Current roles:</strong> {roles.length > 0 ? roles.join(", ") : "None"}
+                                </p>
+                              </div>
+                              <Button onClick={handleAssignRole} className="w-full">Assign Role</Button>
                             </div>
+                          </DialogContent>
+                        </Dialog>
 
-                            <div className="bg-muted p-3 rounded-md">
-                              <p className="text-sm text-muted-foreground">
-                                <strong>Current roles:</strong>{" "}
-                                {roles.length > 0 ? roles.join(", ") : "None"}
-                              </p>
-                            </div>
+                        {/* Edit */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Edit user"
+                          onClick={() => {
+                            setEditUser(user);
+                            setEditFullName(user.full_name);
+                            setEditEmail(user.email);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
 
-                            <Button onClick={handleAssignRole} className="w-full">
-                              Assign Role
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                        {/* Reset Password */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Reset password"
+                          onClick={() => {
+                            setResetUser(user);
+                            setNewPassword("");
+                            setIsResetDialogOpen(true);
+                          }}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+
+                        {/* Delete */}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          title="Delete user"
+                          onClick={() => handleDeleteUser(user)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
