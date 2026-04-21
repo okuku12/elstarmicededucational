@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, FileText, Search, AlertTriangle, Download } from "lucide-react";
+import { BookOpen, FileText, Search, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -33,39 +33,12 @@ const Library = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [categories, setCategories] = useState<string[]>(["all"]);
   const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
+  const [readerBook, setReaderBook] = useState<LibraryBook | null>(null);
   const [pdfError, setPdfError] = useState(false);
 
-  const handleOpenPdf = (url: string) => {
-    // Try opening in a new tab
-    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
-    
-    // Check if popup was blocked or if there might be an issue
-    if (!newWindow || newWindow.closed) {
-      setPdfError(true);
-      toast.error("Unable to open PDF. Try disabling your ad blocker or download directly.");
-    }
-  };
-
-  const handleDownloadPdf = async (url: string, title: string) => {
-    try {
-      toast.info("Starting download...");
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Download failed");
-      
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `${title.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
-      toast.success("Download started!");
-    } catch (error) {
-      toast.error("Download failed. Please try disabling your ad blocker.");
-      setPdfError(true);
-    }
+  const handleOpenPdf = (book: LibraryBook) => {
+    setReaderBook(book);
+    setPdfError(false);
   };
 
   const fetchBooks = async () => {
@@ -291,29 +264,49 @@ const Library = () => {
                         <Alert variant="destructive">
                           <AlertTriangle className="h-4 w-4" />
                           <AlertDescription>
-                            If the PDF doesn't open, please disable your ad blocker for this site or try the download button.
+                            Unable to display this PDF. Please try again later.
                           </AlertDescription>
                         </Alert>
                       )}
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => handleOpenPdf(selectedBook.pdf_url!)} 
-                          className="flex-1"
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          View PDF
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => handleDownloadPdf(selectedBook.pdf_url!, selectedBook.title)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={() => handleOpenPdf(selectedBook)}
+                        className="w-full"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Read Book
+                      </Button>
                     </div>
                   )}
                 </div>
               </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* In-app PDF Reader (no download) */}
+      <Dialog open={!!readerBook} onOpenChange={(open) => !open && setReaderBook(null)}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-4">
+          {readerBook && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="pr-8">{readerBook.title}</DialogTitle>
+              </DialogHeader>
+              <div
+                className="flex-1 min-h-0 rounded-md overflow-hidden bg-muted relative"
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                {readerBook.pdf_url && (
+                  <iframe
+                    src={`${readerBook.pdf_url}#toolbar=0&navpanes=0&scrollbar=1`}
+                    title={readerBook.title}
+                    className="w-full h-full border-0"
+                  />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Reading only — downloading is not permitted.
+              </p>
             </>
           )}
         </DialogContent>
