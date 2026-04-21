@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, FileText } from "lucide-react";
+import { Download } from "lucide-react";
+import { toast } from "sonner";
 
 interface AssignmentCardProps {
   id: string;
@@ -24,6 +25,35 @@ const AssignmentCard = ({
   subject_name,
 }: AssignmentCardProps) => {
   const isOverdue = due_date && new Date(due_date) < new Date();
+
+  const handleDownload = async () => {
+    if (!file_url) return;
+    try {
+      toast.info("Starting download...");
+      const response = await fetch(file_url);
+      if (!response.ok) throw new Error("Download failed");
+      const blob = await response.blob();
+
+      // Try to keep original extension from the URL
+      const urlPath = new URL(file_url).pathname;
+      const ext = urlPath.includes(".") ? urlPath.split(".").pop() : "pdf";
+      const safeTitle = title.replace(/[^a-zA-Z0-9-_ ]/g, "_").trim() || "assignment";
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${safeTitle}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success("Download started!");
+    } catch (error) {
+      // Fallback: open in a new tab so user can save manually
+      window.open(file_url, "_blank", "noopener,noreferrer");
+      toast.error("Direct download failed. Opened the file in a new tab — use your browser's Save option.");
+    }
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -52,11 +82,9 @@ const AssignmentCard = ({
               : "No due date"}
           </p>
           {file_url && (
-            <Button asChild size="sm" variant="outline">
-              <a href={file_url} target="_blank" rel="noopener noreferrer">
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </a>
+            <Button size="sm" variant="outline" onClick={handleDownload}>
+              <Download className="h-4 w-4 mr-2" />
+              Download
             </Button>
           )}
         </div>
