@@ -35,37 +35,9 @@ const Library = () => {
   const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
   const [pdfError, setPdfError] = useState(false);
 
-  const handleOpenPdf = (url: string) => {
-    // Try opening in a new tab
-    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
-    
-    // Check if popup was blocked or if there might be an issue
-    if (!newWindow || newWindow.closed) {
-      setPdfError(true);
-      toast.error("Unable to open PDF. Try disabling your ad blocker or download directly.");
-    }
-  };
-
-  const handleDownloadPdf = async (url: string, title: string) => {
-    try {
-      toast.info("Starting download...");
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Download failed");
-      
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `${title.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
-      toast.success("Download started!");
-    } catch (error) {
-      toast.error("Download failed. Please try disabling your ad blocker.");
-      setPdfError(true);
-    }
+  const handleOpenPdf = (book: LibraryBook) => {
+    setReaderBook(book);
+    setPdfError(false);
   };
 
   const fetchBooks = async () => {
