@@ -264,29 +264,49 @@ const Library = () => {
                         <Alert variant="destructive">
                           <AlertTriangle className="h-4 w-4" />
                           <AlertDescription>
-                            If the PDF doesn't open, please disable your ad blocker for this site or try the download button.
+                            Unable to display this PDF. Please try again later.
                           </AlertDescription>
                         </Alert>
                       )}
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => handleOpenPdf(selectedBook.pdf_url!)} 
-                          className="flex-1"
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          View PDF
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => handleDownloadPdf(selectedBook.pdf_url!, selectedBook.title)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={() => handleOpenPdf(selectedBook)}
+                        className="w-full"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Read Book
+                      </Button>
                     </div>
                   )}
                 </div>
               </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* In-app PDF Reader (no download) */}
+      <Dialog open={!!readerBook} onOpenChange={(open) => !open && setReaderBook(null)}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-4">
+          {readerBook && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="pr-8">{readerBook.title}</DialogTitle>
+              </DialogHeader>
+              <div
+                className="flex-1 min-h-0 rounded-md overflow-hidden bg-muted relative"
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                {readerBook.pdf_url && (
+                  <iframe
+                    src={`${readerBook.pdf_url}#toolbar=0&navpanes=0&scrollbar=1`}
+                    title={readerBook.title}
+                    className="w-full h-full border-0"
+                  />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Reading only — downloading is not permitted.
+              </p>
             </>
           )}
         </DialogContent>
