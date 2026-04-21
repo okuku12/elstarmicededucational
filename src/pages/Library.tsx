@@ -33,6 +33,7 @@ const Library = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [categories, setCategories] = useState<string[]>(["all"]);
   const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
+  const [readerBook, setReaderBook] = useState<LibraryBook | null>(null);
   const [pdfError, setPdfError] = useState(false);
 
   const handleOpenPdf = (book: LibraryBook) => {
