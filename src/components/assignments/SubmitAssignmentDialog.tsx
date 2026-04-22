@@ -14,16 +14,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Upload, CheckCircle2 } from "lucide-react";
+import { Upload, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 interface SubmitAssignmentDialogProps {
   assignmentId: string;
   assignmentTitle: string;
   studentId: string;
+  dueDate?: string | null;
+  /** Optional: parent-supplied existing submission to seed the dialog (saves a fetch). */
+  existingSubmission?: ExistingSubmission | null;
+  /** Called after a successful submit/resubmit so parent can refresh. */
+  onSubmitted?: () => void;
 }
 
-interface ExistingSubmission {
+export interface ExistingSubmission {
   id: string;
   file_url: string | null;
   submission_text: string | null;
@@ -38,16 +43,28 @@ const SubmitAssignmentDialog = ({
   assignmentId,
   assignmentTitle,
   studentId,
+  dueDate,
+  existingSubmission,
+  onSubmitted,
 }: SubmitAssignmentDialogProps) => {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [submissionText, setSubmissionText] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [existing, setExisting] = useState<ExistingSubmission | null>(null);
+  const [existing, setExisting] = useState<ExistingSubmission | null>(existingSubmission ?? null);
   const [loadingExisting, setLoadingExisting] = useState(false);
+
+  const isOverdue = !!dueDate && new Date(dueDate) < new Date();
+  const isGraded = existing?.marks_obtained !== null && existing?.marks_obtained !== undefined;
 
   useEffect(() => {
     if (!open) return;
+    // If parent already provided it, just sync local form state
+    if (existingSubmission !== undefined) {
+      setExisting(existingSubmission);
+      setSubmissionText(existingSubmission?.submission_text || "");
+      return;
+    }
     const load = async () => {
       setLoadingExisting(true);
       const { data, error } = await supabase
@@ -65,9 +82,13 @@ const SubmitAssignmentDialog = ({
       setLoadingExisting(false);
     };
     load();
-  }, [open, assignmentId, studentId]);
+  }, [open, assignmentId, studentId, existingSubmission]);
 
   const handleSubmit = async () => {
+    if (isOverdue) {
+      toast.error("Deadline has passed. Submissions are closed.");
+      return;
+    }
     if (!file && !submissionText.trim()) {
       toast.error("Please attach a file or write a comment.");
       return;
@@ -79,7 +100,8 @@ const SubmitAssignmentDialog = ({
 
     setSubmitting(true);
     try {
-      let file_url: string | null = existing?.file_url ?? null;
+      // We store the storage PATH (not a signed URL) so links never expire.
+      let file_path: string | null = existing?.file_url ?? null;
 
       if (file) {
         const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
@@ -88,18 +110,14 @@ const SubmitAssignmentDialog = ({
           .from("assignment-files")
           .upload(path, file, { upsert: true, contentType: file.type });
         if (uploadError) throw uploadError;
-        const { data: signed } = await supabase.storage
-          .from("assignment-files")
-          .createSignedUrl(path, 60 * 60 * 24 * 365);
-        // Store the storage path so we can re-sign later; also signed URL for immediate access
-        file_url = signed?.signedUrl ?? path;
+        file_path = path;
       }
 
       if (existing) {
         const { error } = await supabase
           .from("assignment_submissions")
           .update({
-            file_url,
+            file_url: file_path,
             submission_text: submissionText.trim() || null,
             submitted_at: new Date().toISOString(),
             // Reset grade on resubmit
@@ -115,15 +133,24 @@ const SubmitAssignmentDialog = ({
         const { error } = await supabase.from("assignment_submissions").insert({
           assignment_id: assignmentId,
           student_id: studentId,
-          file_url,
+          file_url: file_path,
           submission_text: submissionText.trim() || null,
         });
-        if (error) throw error;
+        if (error) {
+          // Friendly message for duplicate (race condition catcher)
+          if (error.code === "23505") {
+            toast.error("You already have a submission for this assignment. Reopen the dialog to resubmit.");
+          } else {
+            throw error;
+          }
+          return;
+        }
         toast.success("Assignment submitted!");
       }
 
       setFile(null);
       setOpen(false);
+      onSubmitted?.();
     } catch (err: any) {
       toast.error("Submission failed: " + (err.message || "Unknown error"));
     } finally {
@@ -134,7 +161,7 @@ const SubmitAssignmentDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" disabled={isOverdue && !existing} variant={existing ? "outline" : "default"}>
           <Upload className="h-4 w-4 mr-2" />
           {existing ? "Resubmit" : "Submit"}
         </Button>
@@ -151,15 +178,23 @@ const SubmitAssignmentDialog = ({
           <div className="py-6 text-center text-sm text-muted-foreground">Loading...</div>
         ) : (
           <div className="space-y-4">
+            {isOverdue && (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                <div>
+                  Deadline has passed ({new Date(dueDate!).toLocaleString()}). New submissions are closed.
+                </div>
+              </div>
+            )}
+
             {existing && (
               <div className="rounded-md border p-3 space-y-2 bg-muted/30">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Already submitted on{" "}
-                  {new Date(existing.submitted_at).toLocaleString()}
+                  Submitted on {new Date(existing.submitted_at).toLocaleString()}
                 </div>
-                {existing.marks_obtained !== null && (
-                  <div className="flex items-center gap-2">
+                {isGraded && (
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge>Graded: {existing.marks_obtained}</Badge>
                     {existing.feedback && (
                       <span className="text-sm text-muted-foreground">
@@ -179,6 +214,7 @@ const SubmitAssignmentDialog = ({
               <Input
                 id="file"
                 type="file"
+                disabled={isOverdue}
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
             </div>
@@ -191,6 +227,7 @@ const SubmitAssignmentDialog = ({
                 onChange={(e) => setSubmissionText(e.target.value)}
                 placeholder="e.g. I had trouble with question 3..."
                 rows={4}
+                disabled={isOverdue}
               />
             </div>
           </div>
@@ -200,7 +237,7 @@ const SubmitAssignmentDialog = ({
           <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting || loadingExisting}>
+          <Button onClick={handleSubmit} disabled={submitting || loadingExisting || isOverdue}>
             {submitting ? "Submitting..." : existing ? "Resubmit" : "Submit"}
           </Button>
         </DialogFooter>
