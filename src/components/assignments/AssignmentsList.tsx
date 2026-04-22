@@ -32,12 +32,14 @@ interface AssignmentsListProps {
   filterByClassId?: string; // For students: limit to their class only
   title?: string;
   description?: string;
+  studentId?: string; // when present, enables submit buttons on cards
 }
 
 const AssignmentsList = ({ 
   filterByClassId, 
   title = "Assignments",
-  description = "View and download assignments"
+  description = "View and download assignments",
+  studentId,
 }: AssignmentsListProps) => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
@@ -172,6 +174,7 @@ const AssignmentsList = ({
                 file_url={assignment.file_url}
                 class_name={assignment.class_name}
                 subject_name={assignment.subject_name}
+                studentId={studentId}
               />
             ))
           ) : (

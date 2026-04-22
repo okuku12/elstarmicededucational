@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import SubmitAssignmentDialog from "./SubmitAssignmentDialog";
 
 interface AssignmentCardProps {
   id: string;
@@ -13,9 +14,11 @@ interface AssignmentCardProps {
   file_url: string | null;
   class_name: string;
   subject_name: string;
+  studentId?: string; // when present, show Submit button
 }
 
 const AssignmentCard = ({
+  id,
   title,
   description,
   due_date,
@@ -23,6 +26,7 @@ const AssignmentCard = ({
   file_url,
   class_name,
   subject_name,
+  studentId,
 }: AssignmentCardProps) => {
   const isOverdue = due_date && new Date(due_date) < new Date();
 
@@ -81,12 +85,21 @@ const AssignmentCard = ({
               ? `Due: ${new Date(due_date).toLocaleDateString()}` 
               : "No due date"}
           </p>
-          {file_url && (
-            <Button size="sm" variant="outline" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {file_url && (
+              <Button size="sm" variant="outline" onClick={handleDownload}>
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            )}
+            {studentId && (
+              <SubmitAssignmentDialog
+                assignmentId={id}
+                assignmentTitle={title}
+                studentId={studentId}
+              />
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

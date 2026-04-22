@@ -9,6 +9,7 @@ import ClassesManagement from "@/components/admin/ClassesManagement";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
+import SubmissionsManagement from "@/components/assignments/SubmissionsManagement";
 
 const TeacherDashboard = () => {
   const { user, loading } = useAuth();
@@ -104,6 +105,7 @@ const TeacherDashboard = () => {
             <TabsList>
               <TabsTrigger value="manage">Manage Assignments</TabsTrigger>
               <TabsTrigger value="view">View All Assignments</TabsTrigger>
+              <TabsTrigger value="submissions">Submissions & Grading</TabsTrigger>
             </TabsList>
             <TabsContent value="manage">
               <AssignmentsManagement />
@@ -113,6 +115,9 @@ const TeacherDashboard = () => {
                 title="All Assignments" 
                 description="Browse and filter all assignments by class or subject" 
               />
+            </TabsContent>
+            <TabsContent value="submissions">
+              <SubmissionsManagement />
             </TabsContent>
           </Tabs>
         </TabsContent>
