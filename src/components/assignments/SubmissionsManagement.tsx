@@ -225,11 +225,13 @@ const SubmissionsManagement = () => {
                         </Badge>
                       )}
                       {row.file_url && (
-                        <Button asChild size="sm" variant="outline">
-                          <a href={row.file_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Open file
-                          </a>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openSignedUrl(row.file_url!)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Open file
                         </Button>
                       )}
                     </div>
