@@ -113,7 +113,8 @@ const StudentDashboard = () => {
             <AssignmentsList
               filterByClassId={studentData.class_id}
               title="My Assignments"
-              description="View and download your class assignments"
+              description="View, download and submit your class assignments"
+              studentId={studentData.id}
             />
           ) : (
             <Card>
