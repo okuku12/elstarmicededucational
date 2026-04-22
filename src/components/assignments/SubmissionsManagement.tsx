@@ -10,6 +10,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
 
+// file_url stores the storage PATH; we sign on demand to avoid expiry
+const openSignedUrl = async (path: string) => {
+  // Old rows may already contain a full https URL — open as-is
+  if (path.startsWith("http")) {
+    window.open(path, "_blank", "noopener,noreferrer");
+    return;
+  }
+  const { data, error } = await supabase.storage
+    .from("assignment-files")
+    .createSignedUrl(path, 60 * 5); // 5 min, fresh on every click
+  if (error || !data?.signedUrl) {
+    toast.error("Could not open file: " + (error?.message || "unknown error"));
+    return;
+  }
+  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+};
+
 interface SubmissionRow {
   id: string;
   assignment_id: string;
@@ -208,11 +225,13 @@ const SubmissionsManagement = () => {
                         </Badge>
                       )}
                       {row.file_url && (
-                        <Button asChild size="sm" variant="outline">
-                          <a href={row.file_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Open file
-                          </a>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openSignedUrl(row.file_url!)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Open file
                         </Button>
                       )}
                     </div>
