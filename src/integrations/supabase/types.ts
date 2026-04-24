@@ -908,7 +908,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      principal_info_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          image_url: string | null
+          message: string | null
+          name: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          message?: string | null
+          name?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          message?: string | null
+          name?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
