@@ -15,14 +15,14 @@ export async function logAudit(params: {
     const user = auth?.user;
     if (!user) return;
 
-    await supabase.from("audit_logs").insert({
+    await supabase.from("audit_logs" as any).insert({
       actor_id: user.id,
       actor_email: user.email ?? null,
       action: params.action,
       entity_type: params.entity_type,
       entity_id: params.entity_id ?? null,
       metadata: params.metadata ?? {},
-    });
+    } as any);
   } catch (err) {
     console.warn("[audit] failed to write log", err);
   }
