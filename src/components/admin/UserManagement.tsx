@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/audit";
 import { UserCog, Shield, GraduationCap, User, Users, UserPlus, Pencil, Trash2, KeyRound } from "lucide-react";
 
 interface UserProfile {
@@ -254,6 +255,12 @@ const UserManagement = () => {
       });
 
       if (error) throw error;
+      logAudit({
+        action: "role.assigned",
+        entity_type: "user_role",
+        entity_id: selectedUser.id,
+        metadata: { target_user_email: selectedUser.email, role: selectedRole },
+      });
       toast.success(`${selectedRole} role assigned successfully`);
       setIsDialogOpen(false);
       setSelectedUser(null);
@@ -269,6 +276,12 @@ const UserManagement = () => {
     try {
       const { error } = await supabase.from("user_roles").delete().eq("id", roleId);
       if (error) throw error;
+      logAudit({
+        action: "role.removed",
+        entity_type: "user_role",
+        entity_id: roleId,
+        metadata: { target_user_id: userId },
+      });
       toast.success("Role removed successfully");
     } catch (error: any) {
       toast.error("Failed to remove role: " + error.message);
@@ -301,6 +314,11 @@ const UserManagement = () => {
       const { error } = await supabase.from("user_roles").insert(roleAssignments);
       if (error) throw error;
 
+      logAudit({
+        action: "role.bulk_assigned",
+        entity_type: "user_role",
+        metadata: { role: bulkRole, count: usersNeedingRole.length, user_ids: usersNeedingRole },
+      });
       toast.success(`Successfully assigned ${bulkRole} role to ${usersNeedingRole.length} user(s)`);
       setIsBulkDialogOpen(false);
       setSelectedUsers(new Set());

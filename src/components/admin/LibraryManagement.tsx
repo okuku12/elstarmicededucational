@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/audit";
 import { BookOpen, FileText, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 
 interface LibraryBook {
@@ -187,12 +188,26 @@ const LibraryManagement = () => {
           .update(bookData)
           .eq("id", editingBook.id);
         if (error) throw error;
+        logAudit({
+          action: "library_book.updated",
+          entity_type: "library_book",
+          entity_id: editingBook.id,
+          metadata: { title, has_new_pdf: !!selectedPdf, has_new_cover: !!selectedFile },
+        });
         toast.success("Book updated successfully");
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from("library_books")
-          .insert({ ...bookData, created_by: user?.id! });
+          .insert({ ...bookData, created_by: user?.id! })
+          .select("id")
+          .single();
         if (error) throw error;
+        logAudit({
+          action: "library_book.created",
+          entity_type: "library_book",
+          entity_id: inserted?.id ?? null,
+          metadata: { title, has_pdf: !!selectedPdf },
+        });
         toast.success("Book added successfully");
       }
 
@@ -213,6 +228,7 @@ const LibraryManagement = () => {
     try {
       const { error } = await supabase.from("library_books").delete().eq("id", id);
       if (error) throw error;
+      logAudit({ action: "library_book.deleted", entity_type: "library_book", entity_id: id });
       toast.success("Book deleted successfully");
     } catch (error: any) {
       toast.error("Failed to delete: " + error.message);

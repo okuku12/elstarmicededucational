@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/audit";
 
 // file_url stores the storage PATH; we sign on demand to avoid expiry
 const openSignedUrl = async (path: string) => {
@@ -157,6 +158,17 @@ const SubmissionsManagement = () => {
         })
         .eq("id", row.id);
       if (error) throw error;
+      logAudit({
+        action: "submission.graded",
+        entity_type: "assignment_submission",
+        entity_id: row.id,
+        metadata: {
+          assignment_id: row.assignment_id,
+          student_id: row.student_id,
+          marks_obtained: marksNum,
+          max_marks: row.max_marks,
+        },
+      });
       toast.success("Grade saved!");
     } catch (err: any) {
       toast.error("Failed to save grade: " + err.message);

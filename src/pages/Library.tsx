@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, FileText, Search, AlertTriangle } from "lucide-react";
+import { BookOpen, FileText, Search, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -35,8 +35,12 @@ const Library = () => {
   const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
   const [readerBook, setReaderBook] = useState<LibraryBook | null>(null);
   const [readerUrl, setReaderUrl] = useState<string | null>(null);
+  const [readerIssuedAt, setReaderIssuedAt] = useState<number>(0);
+  const [iframeLoading, setIframeLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const [openingPdf, setOpeningPdf] = useState(false);
+
+  const SIGNED_URL_TTL_SEC = 60 * 60; // 1h
 
   const extractPdfPath = (url: string): string => {
     const marker = "/library-pdfs/";
@@ -44,23 +48,42 @@ const Library = () => {
     return idx >= 0 ? url.substring(idx + marker.length) : url;
   };
 
+  const generateSignedUrl = async (book: LibraryBook) => {
+    const path = extractPdfPath(book.pdf_url!);
+    const { data, error } = await supabase.storage
+      .from("library-pdfs")
+      .createSignedUrl(path, SIGNED_URL_TTL_SEC);
+    if (error || !data?.signedUrl) throw error || new Error("Failed to generate link");
+    return data.signedUrl;
+  };
+
   const handleOpenPdf = async (book: LibraryBook) => {
     if (!book.pdf_url) return;
     setOpeningPdf(true);
     setPdfError(false);
     try {
-      const path = extractPdfPath(book.pdf_url);
-      const { data, error } = await supabase.storage
-        .from("library-pdfs")
-        .createSignedUrl(path, 60 * 60); // 1 hour
-      if (error || !data?.signedUrl) throw error || new Error("Failed to generate link");
-      setReaderUrl(data.signedUrl);
+      const url = await generateSignedUrl(book);
+      setReaderUrl(url);
+      setReaderIssuedAt(Date.now());
+      setIframeLoading(true);
       setReaderBook(book);
     } catch (e: any) {
       toast.error("Unable to open PDF: " + (e.message || "unknown error"));
       setPdfError(true);
     } finally {
       setOpeningPdf(false);
+    }
+  };
+
+  const handleRefreshLink = async () => {
+    if (!readerBook) return;
+    try {
+      const url = await generateSignedUrl(readerBook);
+      setReaderUrl(url);
+      setReaderIssuedAt(Date.now());
+      setIframeLoading(true);
+    } catch (e: any) {
+      toast.error("Could not refresh link: " + (e.message || "unknown error"));
     }
   };
 
@@ -309,27 +332,46 @@ const Library = () => {
       </Dialog>
 
       {/* In-app PDF Reader (no download) */}
-      <Dialog open={!!readerBook} onOpenChange={(open) => { if (!open) { setReaderBook(null); setReaderUrl(null); } }}>
+      <Dialog open={!!readerBook} onOpenChange={(open) => { if (!open) { setReaderBook(null); setReaderUrl(null); setIframeLoading(false); } }}>
         <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-4">
           {readerBook && (
             <>
-              <DialogHeader>
+              <DialogHeader className="flex-row items-center justify-between space-y-0">
                 <DialogTitle className="pr-8">{readerBook.title}</DialogTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRefreshLink}
+                  className="mr-8"
+                  title="Refresh secure link"
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
               </DialogHeader>
               <div
                 className="flex-1 min-h-0 rounded-md overflow-hidden bg-muted relative"
                 onContextMenu={(e) => e.preventDefault()}
               >
+                {iframeLoading && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10 bg-muted">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Loading book...</p>
+                  </div>
+                )}
                 {readerUrl && (
                   <iframe
+                    key={readerIssuedAt}
                     src={`${readerUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                     title={readerBook.title}
                     className="w-full h-full border-0"
+                    onLoad={() => setIframeLoading(false)}
+                    onError={() => setIframeLoading(false)}
                   />
                 )}
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Reading only — downloading is not permitted.
+                Reading only — downloading is not permitted. Link expires in 1 hour — click <span className="font-medium">Refresh</span> if it stops loading.
               </p>
             </>
           )}
