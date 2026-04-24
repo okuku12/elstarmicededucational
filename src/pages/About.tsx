@@ -10,8 +10,6 @@ interface PrincipalInfo {
   title: string;
   image_url: string | null;
   message: string;
-  email: string | null;
-  phone: string | null;
 }
 
 const About = () => {
@@ -22,8 +20,8 @@ const About = () => {
     const fetchPrincipalInfo = async () => {
       try {
         const { data, error } = await supabase
-          .from("principal_info")
-          .select("*")
+          .from("principal_info_public" as any)
+          .select("id, name, title, image_url, message")
           .limit(1)
           .single();
 
