@@ -39,8 +39,11 @@ const Library = () => {
   const [iframeLoading, setIframeLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const [openingPdf, setOpeningPdf] = useState(false);
+  const [refreshAttempts, setRefreshAttempts] = useState(0);
+  const [refreshExhausted, setRefreshExhausted] = useState(false);
 
   const SIGNED_URL_TTL_SEC = 60 * 60; // 1h
+  const MAX_REFRESH_ATTEMPTS = 1;
 
   const extractPdfPath = (url: string): string => {
     const marker = "/library-pdfs/";
@@ -61,6 +64,8 @@ const Library = () => {
     if (!book.pdf_url) return;
     setOpeningPdf(true);
     setPdfError(false);
+    setRefreshAttempts(0);
+    setRefreshExhausted(false);
     try {
       const url = await generateSignedUrl(book);
       setReaderUrl(url);
@@ -77,12 +82,22 @@ const Library = () => {
 
   const handleRefreshLink = async () => {
     if (!readerBook) return;
+    if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+      setRefreshExhausted(true);
+      toast.error("Refresh failed twice. Please close this reader and reopen the book.");
+      return;
+    }
+    const nextAttempt = refreshAttempts + 1;
+    setRefreshAttempts(nextAttempt);
     try {
       const url = await generateSignedUrl(readerBook);
       setReaderUrl(url);
       setReaderIssuedAt(Date.now());
       setIframeLoading(true);
     } catch (e: any) {
+      if (nextAttempt >= MAX_REFRESH_ATTEMPTS) {
+        setRefreshExhausted(true);
+      }
       toast.error("Could not refresh link: " + (e.message || "unknown error"));
     }
   };
