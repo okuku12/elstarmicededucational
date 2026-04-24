@@ -34,11 +34,34 @@ const Library = () => {
   const [categories, setCategories] = useState<string[]>(["all"]);
   const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
   const [readerBook, setReaderBook] = useState<LibraryBook | null>(null);
+  const [readerUrl, setReaderUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState(false);
+  const [openingPdf, setOpeningPdf] = useState(false);
 
-  const handleOpenPdf = (book: LibraryBook) => {
-    setReaderBook(book);
+  const extractPdfPath = (url: string): string => {
+    const marker = "/library-pdfs/";
+    const idx = url.indexOf(marker);
+    return idx >= 0 ? url.substring(idx + marker.length) : url;
+  };
+
+  const handleOpenPdf = async (book: LibraryBook) => {
+    if (!book.pdf_url) return;
+    setOpeningPdf(true);
     setPdfError(false);
+    try {
+      const path = extractPdfPath(book.pdf_url);
+      const { data, error } = await supabase.storage
+        .from("library-pdfs")
+        .createSignedUrl(path, 60 * 60); // 1 hour
+      if (error || !data?.signedUrl) throw error || new Error("Failed to generate link");
+      setReaderUrl(data.signedUrl);
+      setReaderBook(book);
+    } catch (e: any) {
+      toast.error("Unable to open PDF: " + (e.message || "unknown error"));
+      setPdfError(true);
+    } finally {
+      setOpeningPdf(false);
+    }
   };
 
   const fetchBooks = async () => {
@@ -271,9 +294,10 @@ const Library = () => {
                       <Button
                         onClick={() => handleOpenPdf(selectedBook)}
                         className="w-full"
+                        disabled={openingPdf}
                       >
                         <FileText className="h-4 w-4 mr-2" />
-                        Read Book
+                        {openingPdf ? "Opening..." : "Read Book"}
                       </Button>
                     </div>
                   )}
@@ -285,7 +309,7 @@ const Library = () => {
       </Dialog>
 
       {/* In-app PDF Reader (no download) */}
-      <Dialog open={!!readerBook} onOpenChange={(open) => !open && setReaderBook(null)}>
+      <Dialog open={!!readerBook} onOpenChange={(open) => { if (!open) { setReaderBook(null); setReaderUrl(null); } }}>
         <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-4">
           {readerBook && (
             <>
@@ -296,9 +320,9 @@ const Library = () => {
                 className="flex-1 min-h-0 rounded-md overflow-hidden bg-muted relative"
                 onContextMenu={(e) => e.preventDefault()}
               >
-                {readerBook.pdf_url && (
+                {readerUrl && (
                   <iframe
-                    src={`${readerBook.pdf_url}#toolbar=0&navpanes=0&scrollbar=1`}
+                    src={`${readerUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                     title={readerBook.title}
                     className="w-full h-full border-0"
                   />
