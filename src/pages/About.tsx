@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Target, Eye, Heart, User, Mail, Phone } from "lucide-react";
+import { Target, Eye, Heart, User } from "lucide-react";
 
 interface PrincipalInfo {
   id: string;
@@ -10,8 +10,6 @@ interface PrincipalInfo {
   title: string;
   image_url: string | null;
   message: string;
-  email: string | null;
-  phone: string | null;
 }
 
 const About = () => {
@@ -22,13 +20,13 @@ const About = () => {
     const fetchPrincipalInfo = async () => {
       try {
         const { data, error } = await supabase
-          .from("principal_info")
-          .select("*")
+          .from("principal_info_public" as any)
+          .select("id, name, title, image_url, message")
           .limit(1)
           .single();
 
         if (error && error.code !== "PGRST116") throw error;
-        setPrincipalInfo(data);
+        setPrincipalInfo(data as unknown as PrincipalInfo);
       } catch (error) {
         console.error("Error fetching principal info:", error);
       } finally {
@@ -119,22 +117,6 @@ const About = () => {
                 <div className="text-center md:text-left">
                   <h3 className="text-xl font-bold text-foreground">{principalInfo.name}</h3>
                   <p className="text-primary font-medium">{principalInfo.title}</p>
-                  {principalInfo.email && (
-                    <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                      <Mail className="h-4 w-4" />
-                      <a href={`mailto:${principalInfo.email}`} className="hover:text-primary">
-                        {principalInfo.email}
-                      </a>
-                    </div>
-                  )}
-                  {principalInfo.phone && (
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <Phone className="h-4 w-4" />
-                      <a href={`tel:${principalInfo.phone}`} className="hover:text-primary">
-                        {principalInfo.phone}
-                      </a>
-                    </div>
-                  )}
                 </div>
               </div>
               
