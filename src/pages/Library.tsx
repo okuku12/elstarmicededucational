@@ -358,10 +358,11 @@ const Library = () => {
                   variant="outline"
                   onClick={handleRefreshLink}
                   className="mr-8"
-                  title="Refresh secure link"
+                  disabled={refreshExhausted}
+                  title={refreshExhausted ? "Please reopen the book" : "Refresh secure link"}
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />
-                  Refresh
+                  {refreshExhausted ? "Reopen needed" : "Refresh"}
                 </Button>
               </DialogHeader>
               <div
@@ -385,9 +386,15 @@ const Library = () => {
                   />
                 )}
               </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Reading only — downloading is not permitted. Link expires in 1 hour — click <span className="font-medium">Refresh</span> if it stops loading.
-              </p>
+              {refreshExhausted ? (
+                <p className="text-xs text-destructive text-center">
+                  Could not refresh the secure link. Please close this reader and open the book again.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center">
+                  Reading only — downloading is not permitted. Link expires in 1 hour — click <span className="font-medium">Refresh</span> if it stops loading.
+                </p>
+              )}
             </>
           )}
         </DialogContent>
