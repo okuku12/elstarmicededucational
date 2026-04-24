@@ -35,8 +35,12 @@ const Library = () => {
   const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
   const [readerBook, setReaderBook] = useState<LibraryBook | null>(null);
   const [readerUrl, setReaderUrl] = useState<string | null>(null);
+  const [readerIssuedAt, setReaderIssuedAt] = useState<number>(0);
+  const [iframeLoading, setIframeLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const [openingPdf, setOpeningPdf] = useState(false);
+
+  const SIGNED_URL_TTL_SEC = 60 * 60; // 1h
 
   const extractPdfPath = (url: string): string => {
     const marker = "/library-pdfs/";
@@ -44,23 +48,42 @@ const Library = () => {
     return idx >= 0 ? url.substring(idx + marker.length) : url;
   };
 
+  const generateSignedUrl = async (book: LibraryBook) => {
+    const path = extractPdfPath(book.pdf_url!);
+    const { data, error } = await supabase.storage
+      .from("library-pdfs")
+      .createSignedUrl(path, SIGNED_URL_TTL_SEC);
+    if (error || !data?.signedUrl) throw error || new Error("Failed to generate link");
+    return data.signedUrl;
+  };
+
   const handleOpenPdf = async (book: LibraryBook) => {
     if (!book.pdf_url) return;
     setOpeningPdf(true);
     setPdfError(false);
     try {
-      const path = extractPdfPath(book.pdf_url);
-      const { data, error } = await supabase.storage
-        .from("library-pdfs")
-        .createSignedUrl(path, 60 * 60); // 1 hour
-      if (error || !data?.signedUrl) throw error || new Error("Failed to generate link");
-      setReaderUrl(data.signedUrl);
+      const url = await generateSignedUrl(book);
+      setReaderUrl(url);
+      setReaderIssuedAt(Date.now());
+      setIframeLoading(true);
       setReaderBook(book);
     } catch (e: any) {
       toast.error("Unable to open PDF: " + (e.message || "unknown error"));
       setPdfError(true);
     } finally {
       setOpeningPdf(false);
+    }
+  };
+
+  const handleRefreshLink = async () => {
+    if (!readerBook) return;
+    try {
+      const url = await generateSignedUrl(readerBook);
+      setReaderUrl(url);
+      setReaderIssuedAt(Date.now());
+      setIframeLoading(true);
+    } catch (e: any) {
+      toast.error("Could not refresh link: " + (e.message || "unknown error"));
     }
   };
 
