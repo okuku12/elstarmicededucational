@@ -39,8 +39,11 @@ const Library = () => {
   const [iframeLoading, setIframeLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const [openingPdf, setOpeningPdf] = useState(false);
+  const [refreshAttempts, setRefreshAttempts] = useState(0);
+  const [refreshExhausted, setRefreshExhausted] = useState(false);
 
   const SIGNED_URL_TTL_SEC = 60 * 60; // 1h
+  const MAX_REFRESH_ATTEMPTS = 1;
 
   const extractPdfPath = (url: string): string => {
     const marker = "/library-pdfs/";
@@ -61,6 +64,8 @@ const Library = () => {
     if (!book.pdf_url) return;
     setOpeningPdf(true);
     setPdfError(false);
+    setRefreshAttempts(0);
+    setRefreshExhausted(false);
     try {
       const url = await generateSignedUrl(book);
       setReaderUrl(url);
@@ -77,12 +82,22 @@ const Library = () => {
 
   const handleRefreshLink = async () => {
     if (!readerBook) return;
+    if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+      setRefreshExhausted(true);
+      toast.error("Refresh failed twice. Please close this reader and reopen the book.");
+      return;
+    }
+    const nextAttempt = refreshAttempts + 1;
+    setRefreshAttempts(nextAttempt);
     try {
       const url = await generateSignedUrl(readerBook);
       setReaderUrl(url);
       setReaderIssuedAt(Date.now());
       setIframeLoading(true);
     } catch (e: any) {
+      if (nextAttempt >= MAX_REFRESH_ATTEMPTS) {
+        setRefreshExhausted(true);
+      }
       toast.error("Could not refresh link: " + (e.message || "unknown error"));
     }
   };
@@ -332,7 +347,7 @@ const Library = () => {
       </Dialog>
 
       {/* In-app PDF Reader (no download) */}
-      <Dialog open={!!readerBook} onOpenChange={(open) => { if (!open) { setReaderBook(null); setReaderUrl(null); setIframeLoading(false); } }}>
+      <Dialog open={!!readerBook} onOpenChange={(open) => { if (!open) { setReaderBook(null); setReaderUrl(null); setIframeLoading(false); setRefreshAttempts(0); setRefreshExhausted(false); } }}>
         <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-4">
           {readerBook && (
             <>
@@ -343,10 +358,11 @@ const Library = () => {
                   variant="outline"
                   onClick={handleRefreshLink}
                   className="mr-8"
-                  title="Refresh secure link"
+                  disabled={refreshExhausted}
+                  title={refreshExhausted ? "Please reopen the book" : "Refresh secure link"}
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />
-                  Refresh
+                  {refreshExhausted ? "Reopen needed" : "Refresh"}
                 </Button>
               </DialogHeader>
               <div
@@ -370,9 +386,15 @@ const Library = () => {
                   />
                 )}
               </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Reading only — downloading is not permitted. Link expires in 1 hour — click <span className="font-medium">Refresh</span> if it stops loading.
-              </p>
+              {refreshExhausted ? (
+                <p className="text-xs text-destructive text-center">
+                  Could not refresh the secure link. Please close this reader and open the book again.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center">
+                  Reading only — downloading is not permitted. Link expires in 1 hour — click <span className="font-medium">Refresh</span> if it stops loading.
+                </p>
+              )}
             </>
           )}
         </DialogContent>

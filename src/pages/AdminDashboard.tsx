@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2 } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck } from "lucide-react";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
 import ClassesManagement from "@/components/admin/ClassesManagement";
@@ -18,6 +18,7 @@ import EventsManagement from "@/components/admin/EventsManagement";
 import PrincipalManagement from "@/components/admin/PrincipalManagement";
 import LibraryManagement from "@/components/admin/LibraryManagement";
 import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement";
+import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -84,7 +85,7 @@ const AdminDashboard = () => {
       </Card>
 
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-13 h-auto gap-1">
+        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-14 h-auto gap-1">
           <TabsTrigger value="hero" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
             <span className="hidden sm:inline">Hero</span>
@@ -136,6 +137,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="gallery" className="flex items-center gap-2">
             <Image className="h-4 w-4" />
             <span className="hidden sm:inline">Gallery</span>
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Audit</span>
           </TabsTrigger>
         </TabsList>
 
@@ -189,6 +194,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="gallery">
           <GalleryManagement />
+        </TabsContent>
+
+        <TabsContent value="audit">
+          <AuditLogsViewer />
         </TabsContent>
       </Tabs>
     </div>
