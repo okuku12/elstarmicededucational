@@ -10,6 +10,7 @@ import StudentsManagement from "@/components/admin/StudentsManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import SubmissionsManagement from "@/components/assignments/SubmissionsManagement";
+import AttendanceManagement from "@/components/admin/AttendanceManagement";
 
 const TeacherDashboard = () => {
   const { user, loading } = useAuth();
