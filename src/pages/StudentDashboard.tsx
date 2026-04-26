@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, FileText, Calendar, Award } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
+import StudentAttendanceView from "@/components/students/StudentAttendanceView";
 
 interface StudentData {
   id: string;
@@ -152,15 +153,15 @@ const StudentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="attendance">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Attendance</CardTitle>
-              <CardDescription>View your attendance record</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Attendance records coming soon...</p>
-            </CardContent>
-          </Card>
+          {studentData ? (
+            <StudentAttendanceView studentId={studentData.id} />
+          ) : (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-muted-foreground text-center">Loading…</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
