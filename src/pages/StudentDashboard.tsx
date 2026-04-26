@@ -153,15 +153,15 @@ const StudentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="attendance">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Attendance</CardTitle>
-              <CardDescription>View your attendance record</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Attendance records coming soon...</p>
-            </CardContent>
-          </Card>
+          {studentData ? (
+            <StudentAttendanceView studentId={studentData.id} />
+          ) : (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-muted-foreground text-center">Loading…</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
