@@ -86,7 +86,7 @@ const AdminDashboard = () => {
       </Card>
 
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-15 h-auto gap-1">
+        <TabsList className="flex flex-wrap w-full h-auto gap-1">
           <TabsTrigger value="hero" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
             <span className="hidden sm:inline">Hero</span>
