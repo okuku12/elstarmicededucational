@@ -124,15 +124,7 @@ const TeacherDashboard = () => {
         </TabsContent>
 
         <TabsContent value="attendance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Attendance Management</CardTitle>
-              <CardDescription>Mark and view student attendance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Attendance management coming soon...</p>
-            </CardContent>
-          </Card>
+          <AttendanceManagement />
         </TabsContent>
       </Tabs>
     </div>
