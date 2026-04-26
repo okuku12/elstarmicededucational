@@ -201,6 +201,10 @@ const AdminDashboard = () => {
           <GalleryManagement />
         </TabsContent>
 
+        <TabsContent value="attendance">
+          <AttendanceManagement />
+        </TabsContent>
+
         <TabsContent value="audit">
           <AuditLogsViewer />
         </TabsContent>
