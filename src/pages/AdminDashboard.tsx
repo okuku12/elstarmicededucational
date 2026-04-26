@@ -19,6 +19,7 @@ import PrincipalManagement from "@/components/admin/PrincipalManagement";
 import LibraryManagement from "@/components/admin/LibraryManagement";
 import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement";
 import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
+import AttendanceManagement from "@/components/admin/AttendanceManagement";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
