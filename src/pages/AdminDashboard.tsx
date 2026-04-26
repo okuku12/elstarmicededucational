@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck } from "lucide-react";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
 import ClassesManagement from "@/components/admin/ClassesManagement";
