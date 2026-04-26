@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, FileText, Calendar, Award } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
+import StudentAttendanceView from "@/components/students/StudentAttendanceView";
 
 interface StudentData {
   id: string;
