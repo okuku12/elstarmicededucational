@@ -83,14 +83,15 @@ const About = () => {
               <div className="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-4 w-fit">
                 <Heart className="h-8 w-8" />
               </div>
-              <CardTitle className="text-2xl">Our Values</CardTitle>
+              <CardTitle className="text-2xl">Our Core Values</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="text-muted-foreground space-y-2">
-                <li>• Excellence in all endeavors</li>
-                <li>• Integrity and honesty</li>
-                <li>• Respect and inclusivity</li>
-                <li>• Innovation and creativity</li>
+                <li><span className="font-semibold text-foreground">Love</span> — Caring for one another as a community</li>
+                <li><span className="font-semibold text-foreground">Accountability</span> — Taking responsibility for our actions</li>
+                <li><span className="font-semibold text-foreground">Honesty</span> — Truthfulness in all we do</li>
+                <li><span className="font-semibold text-foreground">Faithfulness</span> — Dedication to our mission and each other</li>
+                <li><span className="font-semibold text-foreground">Integrity</span> — Doing the right thing, even when no one is watching</li>
               </ul>
             </CardContent>
           </Card>
