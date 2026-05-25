@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck, Mail } from "lucide-react";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
 import ClassesManagement from "@/components/admin/ClassesManagement";
@@ -21,6 +21,7 @@ import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement"
 import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
 import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
+import ContactSubmissionsViewer from "@/components/admin/ContactSubmissionsViewer";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -148,6 +149,10 @@ const AdminDashboard = () => {
             <Calendar className="h-4 w-4" />
             <span className="hidden sm:inline">Important Dates</span>
           </TabsTrigger>
+          <TabsTrigger value="messages" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            <span className="hidden sm:inline">Messages</span>
+          </TabsTrigger>
           <TabsTrigger value="audit" className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Audit</span>
@@ -212,6 +217,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="important-dates">
           <ImportantDatesManagement />
+        </TabsContent>
+
+        <TabsContent value="messages">
+          <ContactSubmissionsViewer />
         </TabsContent>
 
         <TabsContent value="audit">
