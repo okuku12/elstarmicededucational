@@ -2,7 +2,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Calendar, FileText, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ImportantDate {
+  id: string;
+  label: string;
+  deadline_text: string;
+}
+
 const Admissions = () => {
+  const [importantDates, setImportantDates] = useState<ImportantDate[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("important_dates")
+      .select("id,label,deadline_text")
+      .eq("is_active", true)
+      .order("display_order")
+      .then(({ data }) => setImportantDates(data || []));
+  }, []);
   const steps = [{
     icon: <FileText className="h-8 w-8" />,
     title: "Submit Application",
@@ -72,18 +91,16 @@ const Admissions = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <div className="font-semibold text-foreground">Early Admission</div>
-                  <div className="text-sm text-muted-foreground">Deadline: December 31</div>
-                </div>
-                <div className="border-l-4 border-primary pl-4">
-                  <div className="font-semibold text-foreground">Regular Admission</div>
-                  <div className="text-sm text-muted-foreground">Deadline: March 15</div>
-                </div>
-                <div className="border-l-4 border-primary pl-4">
-                  <div className="font-semibold text-foreground">Rolling Admission</div>
-                  <div className="text-sm text-muted-foreground">Applications accepted year-round (subject to availability)</div>
-                </div>
+                {importantDates.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No important dates posted yet.</p>
+                ) : (
+                  importantDates.map((d) => (
+                    <div key={d.id} className="border-l-4 border-primary pl-4">
+                      <div className="font-semibold text-foreground">{d.label}</div>
+                      <div className="text-sm text-muted-foreground">{d.deadline_text}</div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

@@ -20,6 +20,7 @@ import LibraryManagement from "@/components/admin/LibraryManagement";
 import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement";
 import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
+import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -143,6 +144,10 @@ const AdminDashboard = () => {
             <ClipboardCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Attendance</span>
           </TabsTrigger>
+          <TabsTrigger value="important-dates" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span className="hidden sm:inline">Important Dates</span>
+          </TabsTrigger>
           <TabsTrigger value="audit" className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Audit</span>
@@ -203,6 +208,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="attendance">
           <AttendanceManagement />
+        </TabsContent>
+
+        <TabsContent value="important-dates">
+          <ImportantDatesManagement />
         </TabsContent>
 
         <TabsContent value="audit">
