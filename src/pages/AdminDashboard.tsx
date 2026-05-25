@@ -210,6 +210,10 @@ const AdminDashboard = () => {
           <AttendanceManagement />
         </TabsContent>
 
+        <TabsContent value="important-dates">
+          <ImportantDatesManagement />
+        </TabsContent>
+
         <TabsContent value="audit">
           <AuditLogsViewer />
         </TabsContent>
