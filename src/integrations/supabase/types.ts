@@ -637,6 +637,39 @@ export type Database = {
         }
         Relationships: []
       }
+      important_dates: {
+        Row: {
+          created_at: string
+          created_by: string
+          deadline_text: string
+          display_order: number
+          id: string
+          is_active: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          deadline_text: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deadline_text?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       library_books: {
         Row: {
           author: string
