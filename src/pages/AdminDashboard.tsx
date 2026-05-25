@@ -219,6 +219,10 @@ const AdminDashboard = () => {
           <ImportantDatesManagement />
         </TabsContent>
 
+        <TabsContent value="messages">
+          <ContactSubmissionsViewer />
+        </TabsContent>
+
         <TabsContent value="audit">
           <AuditLogsViewer />
         </TabsContent>
