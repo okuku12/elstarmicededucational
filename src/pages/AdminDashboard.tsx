@@ -20,6 +20,7 @@ import LibraryManagement from "@/components/admin/LibraryManagement";
 import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement";
 import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
+import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
