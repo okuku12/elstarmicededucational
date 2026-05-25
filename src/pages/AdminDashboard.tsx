@@ -21,6 +21,7 @@ import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement"
 import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
 import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
+import ContactSubmissionsViewer from "@/components/admin/ContactSubmissionsViewer";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
