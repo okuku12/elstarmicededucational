@@ -91,18 +91,16 @@ const Admissions = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <div className="font-semibold text-foreground">Early Admission</div>
-                  <div className="text-sm text-muted-foreground">Deadline: December 31</div>
-                </div>
-                <div className="border-l-4 border-primary pl-4">
-                  <div className="font-semibold text-foreground">Regular Admission</div>
-                  <div className="text-sm text-muted-foreground">Deadline: March 15</div>
-                </div>
-                <div className="border-l-4 border-primary pl-4">
-                  <div className="font-semibold text-foreground">Rolling Admission</div>
-                  <div className="text-sm text-muted-foreground">Applications accepted year-round (subject to availability)</div>
-                </div>
+                {importantDates.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No important dates posted yet.</p>
+                ) : (
+                  importantDates.map((d) => (
+                    <div key={d.id} className="border-l-4 border-primary pl-4">
+                      <div className="font-semibold text-foreground">{d.label}</div>
+                      <div className="text-sm text-muted-foreground">{d.deadline_text}</div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
