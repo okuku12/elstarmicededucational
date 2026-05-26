@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BookOpen, FileText, Calendar, Award } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import StudentAttendanceView from "@/components/students/StudentAttendanceView";
+import LoadingScreen from "@/components/LoadingScreen";
 
 interface StudentData {
   id: string;
