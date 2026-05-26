@@ -22,6 +22,7 @@ import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
 import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
 import ContactSubmissionsViewer from "@/components/admin/ContactSubmissionsViewer";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -71,15 +72,11 @@ const AdminDashboard = () => {
   }, [user, loading, checkingRole, isAdmin, navigate]);
 
   if (loading || checkingRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Loading admin dashboard..." />;
   }
 
   if (!isAdmin) {
-    return null;
+    return <LoadingScreen message="Redirecting..." />;
   }
 
   return (

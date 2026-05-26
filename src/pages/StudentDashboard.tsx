@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BookOpen, FileText, Calendar, Award } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import StudentAttendanceView from "@/components/students/StudentAttendanceView";
+import LoadingScreen from "@/components/LoadingScreen";
 
 interface StudentData {
   id: string;
@@ -71,16 +72,13 @@ const StudentDashboard = () => {
   }, [user, loading, checkingRole, isStudent, navigate]);
 
   if (loading || checkingRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Loading student dashboard..." />;
   }
 
   if (!isStudent) {
-    return null;
+    return <LoadingScreen message="Redirecting..." />;
   }
+
 
   return (
     <div className="container mx-auto py-8 px-4">
