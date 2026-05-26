@@ -22,12 +22,16 @@ const StudentDashboard = () => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
 
   useEffect(() => {
+    if (loading) return;
+
     const checkStudentRole = async () => {
       if (!user) {
+        setIsStudent(false);
         setCheckingRole(false);
         return;
       }
 
+      setCheckingRole(true);
       try {
         const { data: roleData, error: roleError } = await supabase
           .from("user_roles")
@@ -58,7 +62,7 @@ const StudentDashboard = () => {
     };
 
     checkStudentRole();
-  }, [user]);
+  }, [user, loading]);
 
   useEffect(() => {
     if (!loading && !checkingRole && (!user || !isStudent)) {

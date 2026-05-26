@@ -33,12 +33,16 @@ const AdminDashboard = () => {
   const defaultTab = searchParams.get("tab") || "hero";
 
   useEffect(() => {
+    if (loading) return;
+
     const checkAdminRole = async () => {
       if (!user) {
+        setIsAdmin(false);
         setCheckingRole(false);
         return;
       }
 
+      setCheckingRole(true);
       try {
         const { data, error } = await supabase
           .from("user_roles")
@@ -58,7 +62,7 @@ const AdminDashboard = () => {
     };
 
     checkAdminRole();
-  }, [user]);
+  }, [user, loading]);
 
   useEffect(() => {
     if (!loading && !checkingRole && (!user || !isAdmin)) {
