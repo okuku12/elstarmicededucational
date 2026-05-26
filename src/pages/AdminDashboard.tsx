@@ -22,6 +22,7 @@ import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
 import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
 import ContactSubmissionsViewer from "@/components/admin/ContactSubmissionsViewer";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
