@@ -57,15 +57,11 @@ const TeacherDashboard = () => {
   }, [user, loading, checkingRole, isTeacher, navigate]);
 
   if (loading || checkingRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Loading teacher dashboard..." />;
   }
 
   if (!isTeacher) {
-    return null;
+    return <LoadingScreen message="Redirecting..." />;
   }
 
   return (
