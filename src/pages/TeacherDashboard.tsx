@@ -11,6 +11,7 @@ import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import SubmissionsManagement from "@/components/assignments/SubmissionsManagement";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const TeacherDashboard = () => {
   const { user, loading } = useAuth();
