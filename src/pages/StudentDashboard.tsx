@@ -50,10 +50,10 @@ const StudentDashboard = () => {
             .from("students")
             .select("id, student_id, class_id")
             .eq("user_id", user.id)
-            .single();
+            .maybeSingle();
 
-          if (studentError) throw studentError;
-          setStudentData(student);
+          if (studentError) console.error("Error loading student record:", studentError);
+          setStudentData(student ?? null);
         }
       } catch (error) {
         console.error("Error checking student role:", error);
