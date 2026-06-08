@@ -4,9 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, Calendar, Award } from "lucide-react";
+import { BookOpen, FileText, Calendar, Award, LayoutDashboard } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import StudentAttendanceView from "@/components/students/StudentAttendanceView";
+import StudentOverview from "@/components/student/StudentOverview";
 import LoadingScreen from "@/components/LoadingScreen";
 
 interface StudentData {
@@ -91,8 +92,12 @@ const StudentDashboard = () => {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="assignments" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <LayoutDashboard className="h-4 w-4" />
+            <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
           <TabsTrigger value="assignments" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Assignments</span>
@@ -110,6 +115,14 @@ const StudentDashboard = () => {
             <span className="hidden sm:inline">Attendance</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          {studentData ? (
+            <StudentOverview studentId={studentData.id} classId={studentData.class_id} />
+          ) : (
+            <LoadingScreen message="Loading overview..." />
+          )}
+        </TabsContent>
 
         <TabsContent value="assignments">
           {studentData?.class_id ? (

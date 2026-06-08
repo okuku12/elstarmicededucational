@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck, Mail } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck, Mail, LayoutDashboard } from "lucide-react";
+import AdminOverview from "@/components/admin/AdminOverview";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
 import ClassesManagement from "@/components/admin/ClassesManagement";
@@ -31,7 +32,7 @@ const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
   
-  const defaultTab = searchParams.get("tab") || "hero";
+  const defaultTab = searchParams.get("tab") || "overview";
 
   useEffect(() => {
     if (loading) return;
@@ -90,6 +91,10 @@ const AdminDashboard = () => {
 
       <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList className="flex flex-wrap w-full h-auto gap-1">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <LayoutDashboard className="h-4 w-4" />
+            <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
           <TabsTrigger value="hero" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
             <span className="hidden sm:inline">Hero</span>
@@ -159,6 +164,10 @@ const AdminDashboard = () => {
             <span className="hidden sm:inline">Audit</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          <AdminOverview />
+        </TabsContent>
 
         <TabsContent value="hero">
           <HeroSectionManagement />
