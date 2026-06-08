@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, FileText, Calendar } from "lucide-react";
+import { BookOpen, Users, FileText, Calendar, LayoutDashboard } from "lucide-react";
+import TeacherOverview from "@/components/teacher/TeacherOverview";
 import ClassesManagement from "@/components/admin/ClassesManagement";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
@@ -74,8 +75,12 @@ const TeacherDashboard = () => {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="classes" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <LayoutDashboard className="h-4 w-4" />
+            <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
           <TabsTrigger value="classes" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Classes</span>
@@ -93,6 +98,10 @@ const TeacherDashboard = () => {
             <span className="hidden sm:inline">Attendance</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          <TeacherOverview />
+        </TabsContent>
 
         <TabsContent value="classes">
           <ClassesManagement />
