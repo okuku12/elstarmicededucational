@@ -92,93 +92,11 @@ const StudentDashboard = () => {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="hidden sm:inline">Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="assignments" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Assignments</span>
-          </TabsTrigger>
-          <TabsTrigger value="grades" className="flex items-center gap-2">
-            <Award className="h-4 w-4" />
-            <span className="hidden sm:inline">Grades</span>
-          </TabsTrigger>
-          <TabsTrigger value="materials" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Materials</span>
-          </TabsTrigger>
-          <TabsTrigger value="attendance" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Attendance</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          {studentData ? (
-            <StudentOverview studentId={studentData.id} classId={studentData.class_id} />
-          ) : (
-            <LoadingScreen message="Loading overview..." />
-          )}
-        </TabsContent>
-
-        <TabsContent value="assignments">
-          {studentData?.class_id ? (
-            <AssignmentsList
-              filterByClassId={studentData.class_id}
-              title="My Assignments"
-              description="View, download and submit your class assignments"
-              studentId={studentData.id}
-            />
-          ) : (
-            <Card>
-              <CardContent className="py-8">
-                <p className="text-muted-foreground text-center">
-                  You are not assigned to a class yet. Please contact your administrator.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="grades">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Grades</CardTitle>
-              <CardDescription>View your academic performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Grades will be displayed here...</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="materials">
-          <Card>
-            <CardHeader>
-              <CardTitle>Study Materials</CardTitle>
-              <CardDescription>Download class materials and resources</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Study materials coming soon...</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="attendance">
-          {studentData ? (
-            <StudentAttendanceView studentId={studentData.id} />
-          ) : (
-            <Card>
-              <CardContent className="py-8">
-                <p className="text-muted-foreground text-center">Loading…</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+      {studentData ? (
+        <StudentOverview studentId={studentData.id} classId={studentData.class_id} />
+      ) : (
+        <LoadingScreen message="Loading overview..." />
+      )}
     </div>
   );
 };
