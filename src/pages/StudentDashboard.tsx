@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, Calendar, Award, LayoutDashboard } from "lucide-react";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookOpen, FileText, Megaphone, LayoutDashboard, Library as LibraryIcon } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
-import StudentAttendanceView from "@/components/students/StudentAttendanceView";
 import StudentOverview from "@/components/student/StudentOverview";
+import StudentAnnouncements from "@/components/student/StudentAnnouncements";
+import StudentSubjects from "@/components/student/StudentSubjects";
+import Library from "@/pages/Library";
 import LoadingScreen from "@/components/LoadingScreen";
 
 interface StudentData {
@@ -80,7 +82,6 @@ const StudentDashboard = () => {
     return <LoadingScreen message="Redirecting..." />;
   }
 
-
   return (
     <div className="container mx-auto py-8 px-4">
       <Card className="mb-8">
@@ -92,11 +93,58 @@ const StudentDashboard = () => {
         </CardHeader>
       </Card>
 
-      {studentData ? (
-        <StudentOverview studentId={studentData.id} classId={studentData.class_id} />
-      ) : (
-        <LoadingScreen message="Loading overview..." />
-      )}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+          <TabsTrigger value="overview">
+            <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="assignments">
+            <FileText className="h-4 w-4 mr-2" /> Assignments
+          </TabsTrigger>
+          <TabsTrigger value="subjects">
+            <BookOpen className="h-4 w-4 mr-2" /> Subjects
+          </TabsTrigger>
+          <TabsTrigger value="announcements">
+            <Megaphone className="h-4 w-4 mr-2" /> Announcements
+          </TabsTrigger>
+          <TabsTrigger value="library">
+            <LibraryIcon className="h-4 w-4 mr-2" /> Library
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          {studentData ? (
+            <StudentOverview studentId={studentData.id} classId={studentData.class_id} />
+          ) : (
+            <LoadingScreen message="Loading overview..." />
+          )}
+        </TabsContent>
+
+        <TabsContent value="assignments">
+          {studentData ? (
+            <AssignmentsList
+              filterByClassId={studentData.class_id || undefined}
+              title="My Assignments"
+              description="Assignments for your class"
+              studentId={studentData.id}
+            />
+          ) : (
+            <LoadingScreen message="Loading assignments..." />
+          )}
+        </TabsContent>
+
+        <TabsContent value="subjects">
+          <StudentSubjects classId={studentData?.class_id ?? null} />
+        </TabsContent>
+
+        <TabsContent value="announcements">
+          <StudentAnnouncements />
+        </TabsContent>
+
+        <TabsContent value="library">
+          <Library />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
