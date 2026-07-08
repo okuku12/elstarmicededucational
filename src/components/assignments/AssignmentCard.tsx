@@ -55,13 +55,27 @@ const AssignmentCard = ({
   const handleDownload = async () => {
     if (!file_url) return;
     try {
-      toast.info("Starting download...");
-      const response = await fetch(file_url);
+      toast.info("Preparing download...");
+
+      // file_url may be a full public URL (legacy) or a storage path.
+      // The `assignment-files` bucket is PRIVATE, so we must sign it.
+      let storagePath = file_url;
+      const marker = "/assignment-files/";
+      const idx = file_url.indexOf(marker);
+      if (idx !== -1) {
+        storagePath = file_url.substring(idx + marker.length);
+      }
+
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("assignment-files")
+        .createSignedUrl(storagePath, 60 * 10);
+      if (signErr || !signed?.signedUrl) throw signErr || new Error("Could not sign URL");
+
+      const response = await fetch(signed.signedUrl);
       if (!response.ok) throw new Error("Download failed");
       const blob = await response.blob();
 
-      const urlPath = new URL(file_url).pathname;
-      const ext = urlPath.includes(".") ? urlPath.split(".").pop() : "pdf";
+      const ext = storagePath.includes(".") ? storagePath.split(".").pop() : "pdf";
       const safeTitle = title.replace(/[^a-zA-Z0-9-_ ]/g, "_").trim() || "assignment";
 
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -73,9 +87,8 @@ const AssignmentCard = ({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
       toast.success("Download started!");
-    } catch {
-      window.open(file_url, "_blank", "noopener,noreferrer");
-      toast.error("Direct download failed. Opened the file in a new tab — use your browser's Save option.");
+    } catch (err: any) {
+      toast.error("Download failed: " + (err?.message || "Unknown error"));
     }
   };
 
