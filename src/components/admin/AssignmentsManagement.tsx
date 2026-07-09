@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2, Upload, FileText, Loader2 } from "lucide-react";
 import { assignmentSchema } from "@/lib/validations";
+import { extractStoragePath } from "@/lib/storagePaths";
 
 interface Assignment {
   id: string;
@@ -110,11 +111,34 @@ const AssignmentsManagement = () => {
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from("assignment-files")
-      .getPublicUrl(fileName);
+    return fileName;
+  };
 
-    return publicUrl;
+  const openAssignmentFile = async (fileUrl: string) => {
+    const path = extractStoragePath(fileUrl, "assignment-files");
+    const loadingToast = toast.loading("Preparing document...");
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("assignment-files")
+        .createSignedUrl(path, 60 * 10);
+
+      if (error || !data?.signedUrl) throw error || new Error("Could not prepare document link");
+
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      toast.success("Document opened", { id: loadingToast });
+    } catch (error: any) {
+      toast.error("Could not open this document", {
+        id: loadingToast,
+        description: error?.status === 404 || /not found|bucket/i.test(error?.message || "")
+          ? "The file is missing or was uploaded before private document links were enabled. Please re-upload it."
+          : "Please try again. If it continues, re-upload the file.",
+        action: {
+          label: "Try again",
+          onClick: () => openAssignmentFile(fileUrl),
+        },
+      });
+    }
   };
 
   const handleSave = async (formData: FormData) => {
@@ -320,15 +344,15 @@ const AssignmentsManagement = () => {
                     </TableCell>
                     <TableCell>
                       {assignment.file_url ? (
-                        <a 
-                          href={assignment.file_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="h-auto p-0 inline-flex items-center gap-1"
+                          onClick={() => openAssignmentFile(assignment.file_url!)}
                         >
                           <FileText className="h-4 w-4" />
                           View
-                        </a>
+                        </Button>
                       ) : "-"}
                     </TableCell>
                     <TableCell>{assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : "No due date"}</TableCell>
@@ -350,15 +374,15 @@ const AssignmentsManagement = () => {
                                 <Label>Assignment File (PDF/DOC)</Label>
                                 <div className="mt-2">
                                   {assignment.file_url && !selectedFile && (
-                                    <a 
-                                      href={assignment.file_url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-2 text-primary hover:underline mb-2"
+                                    <Button
+                                      type="button"
+                                      variant="link"
+                                      className="h-auto p-0 inline-flex items-center gap-2 mb-2"
+                                      onClick={() => openAssignmentFile(assignment.file_url!)}
                                     >
                                       <FileText className="h-4 w-4" />
                                       Current file
-                                    </a>
+                                    </Button>
                                   )}
                                   <div 
                                     className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
