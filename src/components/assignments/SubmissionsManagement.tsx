@@ -10,17 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
 import { logAudit } from "@/lib/audit";
+import { extractStoragePath } from "@/lib/storagePaths";
 
 // file_url stores the storage PATH; we sign on demand to avoid expiry
 const openSignedUrl = async (path: string) => {
-  // Old rows may already contain a full https URL — open as-is
-  if (path.startsWith("http")) {
-    window.open(path, "_blank", "noopener,noreferrer");
-    return;
-  }
+  const storagePath = extractStoragePath(path, "assignment-files");
   const { data, error } = await supabase.storage
     .from("assignment-files")
-    .createSignedUrl(path, 60 * 5); // 5 min, fresh on every click
+    .createSignedUrl(storagePath, 60 * 5); // 5 min, fresh on every click
   if (error || !data?.signedUrl) {
     toast.error("Could not open file: " + (error?.message || "unknown error"));
     return;

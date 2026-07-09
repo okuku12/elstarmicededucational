@@ -6,6 +6,7 @@ import { Download, CheckCircle2, Clock, Award } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import SubmitAssignmentDialog, { ExistingSubmission } from "./SubmitAssignmentDialog";
+import { extractStoragePath } from "@/lib/storagePaths";
 
 interface AssignmentCardProps {
   id: string;
@@ -84,11 +85,8 @@ const AssignmentCard = ({
   const handleDownload = async () => {
     if (!file_url) return;
 
-    // file_url may be a full public URL (legacy) or a storage path.
-    let storagePath = file_url;
-    const marker = "/assignment-files/";
-    const idx = file_url.indexOf(marker);
-    if (idx !== -1) storagePath = file_url.substring(idx + marker.length);
+    // file_url may be a full legacy URL or a storage path.
+    const storagePath = extractStoragePath(file_url, "assignment-files");
 
     const MAX_ATTEMPTS = 3;
     let lastErr: any = null;
