@@ -121,6 +121,14 @@ const TeacherDashboard = () => {
           <StudentsManagement />
         </TabsContent>
 
+        <TabsContent value="marks">
+          <MarksEntry />
+        </TabsContent>
+
+        <TabsContent value="report-cards">
+          <ReportCardsManagement />
+        </TabsContent>
+
         <TabsContent value="assignments">
           <Tabs defaultValue="manage" className="space-y-4">
             <TabsList>
