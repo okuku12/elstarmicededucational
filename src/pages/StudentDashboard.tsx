@@ -4,11 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, Megaphone, LayoutDashboard, Library as LibraryIcon } from "lucide-react";
+import { BookOpen, FileText, Megaphone, LayoutDashboard, Library as LibraryIcon, Award, DollarSign, FileCheck } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import StudentOverview from "@/components/student/StudentOverview";
 import StudentAnnouncements from "@/components/student/StudentAnnouncements";
 import StudentSubjects from "@/components/student/StudentSubjects";
+import StudentResults from "@/components/student/StudentResults";
+import StudentReportCards from "@/components/student/StudentReportCards";
+import StudentFees from "@/components/student/StudentFees";
 import Library from "@/pages/Library";
 import LoadingScreen from "@/components/LoadingScreen";
 
