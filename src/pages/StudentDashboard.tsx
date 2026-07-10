@@ -97,9 +97,18 @@ const StudentDashboard = () => {
       </Card>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+        <TabsList className="flex flex-wrap w-full h-auto gap-1">
           <TabsTrigger value="overview">
             <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="results">
+            <Award className="h-4 w-4 mr-2" /> Results
+          </TabsTrigger>
+          <TabsTrigger value="report-cards">
+            <FileCheck className="h-4 w-4 mr-2" /> Report Cards
+          </TabsTrigger>
+          <TabsTrigger value="fees">
+            <DollarSign className="h-4 w-4 mr-2" /> Fees
           </TabsTrigger>
           <TabsTrigger value="assignments">
             <FileText className="h-4 w-4 mr-2" /> Assignments
