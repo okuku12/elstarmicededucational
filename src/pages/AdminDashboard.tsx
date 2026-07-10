@@ -152,6 +152,10 @@ const AdminDashboard = () => {
             <ClipboardCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Attendance</span>
           </TabsTrigger>
+          <TabsTrigger value="fees" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            <span className="hidden sm:inline">Fees</span>
+          </TabsTrigger>
           <TabsTrigger value="important-dates" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <span className="hidden sm:inline">Important Dates</span>
