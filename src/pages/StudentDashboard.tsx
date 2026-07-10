@@ -132,6 +132,18 @@ const StudentDashboard = () => {
           )}
         </TabsContent>
 
+        <TabsContent value="results">
+          {studentData ? <StudentResults studentId={studentData.id} /> : <LoadingScreen message="Loading..." />}
+        </TabsContent>
+
+        <TabsContent value="report-cards">
+          {studentData ? <StudentReportCards studentId={studentData.id} /> : <LoadingScreen message="Loading..." />}
+        </TabsContent>
+
+        <TabsContent value="fees">
+          {studentData ? <StudentFees studentId={studentData.id} /> : <LoadingScreen message="Loading..." />}
+        </TabsContent>
+
         <TabsContent value="assignments">
           {studentData ? (
             <AssignmentsList
