@@ -529,6 +529,50 @@ export type Database = {
           },
         ]
       }
+      fee_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string | null
+          note: string | null
+          paid_on: string
+          recorded_by: string | null
+          reference: string | null
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          recorded_by?: string | null
+          reference?: string | null
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          recorded_by?: string | null
+          reference?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gallery: {
         Row: {
           category: string
@@ -793,6 +837,101 @@ export type Database = {
         }
         Relationships: []
       }
+      report_cards: {
+        Row: {
+          academic_year: string
+          class_id: string
+          created_at: string
+          id: string
+          pdf_path: string | null
+          remarks: string | null
+          student_id: string
+          term: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          academic_year: string
+          class_id: string
+          created_at?: string
+          id?: string
+          pdf_path?: string | null
+          remarks?: string | null
+          student_id: string
+          term: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          academic_year?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          pdf_path?: string | null
+          remarks?: string | null
+          student_id?: string
+          term?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_cards_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_cards_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_fees: {
+        Row: {
+          academic_year: string
+          created_at: string
+          id: string
+          notes: string | null
+          student_id: string
+          total_due: number
+          total_paid: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          student_id: string
+          total_due?: number
+          total_paid?: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          student_id?: string
+          total_due?: number
+          total_paid?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_fees_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null
@@ -1011,6 +1150,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["user_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_class_teacher: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_subject_teacher: {
+        Args: { _class_id: string; _subject_id: string; _user_id: string }
         Returns: boolean
       }
     }

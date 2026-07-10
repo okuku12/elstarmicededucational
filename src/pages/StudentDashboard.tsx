@@ -4,11 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, Megaphone, LayoutDashboard, Library as LibraryIcon } from "lucide-react";
+import { BookOpen, FileText, Megaphone, LayoutDashboard, Library as LibraryIcon, Award, DollarSign, FileCheck } from "lucide-react";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import StudentOverview from "@/components/student/StudentOverview";
 import StudentAnnouncements from "@/components/student/StudentAnnouncements";
 import StudentSubjects from "@/components/student/StudentSubjects";
+import StudentResults from "@/components/student/StudentResults";
+import StudentReportCards from "@/components/student/StudentReportCards";
+import StudentFees from "@/components/student/StudentFees";
 import Library from "@/pages/Library";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -94,9 +97,18 @@ const StudentDashboard = () => {
       </Card>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+        <TabsList className="flex flex-wrap w-full h-auto gap-1">
           <TabsTrigger value="overview">
             <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="results">
+            <Award className="h-4 w-4 mr-2" /> Results
+          </TabsTrigger>
+          <TabsTrigger value="report-cards">
+            <FileCheck className="h-4 w-4 mr-2" /> Report Cards
+          </TabsTrigger>
+          <TabsTrigger value="fees">
+            <DollarSign className="h-4 w-4 mr-2" /> Fees
           </TabsTrigger>
           <TabsTrigger value="assignments">
             <FileText className="h-4 w-4 mr-2" /> Assignments
@@ -118,6 +130,18 @@ const StudentDashboard = () => {
           ) : (
             <LoadingScreen message="Loading overview..." />
           )}
+        </TabsContent>
+
+        <TabsContent value="results">
+          {studentData ? <StudentResults studentId={studentData.id} /> : <LoadingScreen message="Loading..." />}
+        </TabsContent>
+
+        <TabsContent value="report-cards">
+          {studentData ? <StudentReportCards studentId={studentData.id} /> : <LoadingScreen message="Loading..." />}
+        </TabsContent>
+
+        <TabsContent value="fees">
+          {studentData ? <StudentFees studentId={studentData.id} /> : <LoadingScreen message="Loading..." />}
         </TabsContent>
 
         <TabsContent value="assignments">

@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck, Mail, LayoutDashboard } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck, Mail, LayoutDashboard, DollarSign } from "lucide-react";
+import FeesManagement from "@/components/admin/FeesManagement";
 import AdminOverview from "@/components/admin/AdminOverview";
 import StudentsManagement from "@/components/admin/StudentsManagement";
 import TeachersManagement from "@/components/admin/TeachersManagement";
@@ -151,6 +152,10 @@ const AdminDashboard = () => {
             <ClipboardCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Attendance</span>
           </TabsTrigger>
+          <TabsTrigger value="fees" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            <span className="hidden sm:inline">Fees</span>
+          </TabsTrigger>
           <TabsTrigger value="important-dates" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <span className="hidden sm:inline">Important Dates</span>
@@ -223,6 +228,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="attendance">
           <AttendanceManagement />
+        </TabsContent>
+
+        <TabsContent value="fees">
+          <FeesManagement />
         </TabsContent>
 
         <TabsContent value="important-dates">

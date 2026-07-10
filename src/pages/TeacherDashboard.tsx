@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, FileText, Calendar, LayoutDashboard } from "lucide-react";
+import { BookOpen, Users, FileText, Calendar, LayoutDashboard, ClipboardEdit, FileCheck } from "lucide-react";
 import TeacherOverview from "@/components/teacher/TeacherOverview";
 import ClassesManagement from "@/components/admin/ClassesManagement";
 import StudentsManagement from "@/components/admin/StudentsManagement";
@@ -12,6 +12,8 @@ import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import SubmissionsManagement from "@/components/assignments/SubmissionsManagement";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
+import MarksEntry from "@/components/teacher/MarksEntry";
+import ReportCardsManagement from "@/components/teacher/ReportCardsManagement";
 import LoadingScreen from "@/components/LoadingScreen";
 
 const TeacherDashboard = () => {
@@ -76,7 +78,7 @@ const TeacherDashboard = () => {
       </Card>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="flex flex-wrap w-full h-auto gap-1">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <LayoutDashboard className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -88,6 +90,14 @@ const TeacherDashboard = () => {
           <TabsTrigger value="students" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Students</span>
+          </TabsTrigger>
+          <TabsTrigger value="marks" className="flex items-center gap-2">
+            <ClipboardEdit className="h-4 w-4" />
+            <span className="hidden sm:inline">Marks</span>
+          </TabsTrigger>
+          <TabsTrigger value="report-cards" className="flex items-center gap-2">
+            <FileCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Report Cards</span>
           </TabsTrigger>
           <TabsTrigger value="assignments" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -109,6 +119,14 @@ const TeacherDashboard = () => {
 
         <TabsContent value="students">
           <StudentsManagement />
+        </TabsContent>
+
+        <TabsContent value="marks">
+          <MarksEntry />
+        </TabsContent>
+
+        <TabsContent value="report-cards">
+          <ReportCardsManagement />
         </TabsContent>
 
         <TabsContent value="assignments">
