@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, FileText, Calendar, LayoutDashboard } from "lucide-react";
+import { BookOpen, Users, FileText, Calendar, LayoutDashboard, ClipboardEdit, FileCheck } from "lucide-react";
 import TeacherOverview from "@/components/teacher/TeacherOverview";
 import ClassesManagement from "@/components/admin/ClassesManagement";
 import StudentsManagement from "@/components/admin/StudentsManagement";
@@ -12,6 +12,8 @@ import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import SubmissionsManagement from "@/components/assignments/SubmissionsManagement";
 import AttendanceManagement from "@/components/admin/AttendanceManagement";
+import MarksEntry from "@/components/teacher/MarksEntry";
+import ReportCardsManagement from "@/components/teacher/ReportCardsManagement";
 import LoadingScreen from "@/components/LoadingScreen";
 
 const TeacherDashboard = () => {
