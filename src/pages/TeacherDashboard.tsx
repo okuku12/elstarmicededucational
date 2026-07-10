@@ -78,7 +78,7 @@ const TeacherDashboard = () => {
       </Card>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="flex flex-wrap w-full h-auto gap-1">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <LayoutDashboard className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -90,6 +90,14 @@ const TeacherDashboard = () => {
           <TabsTrigger value="students" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Students</span>
+          </TabsTrigger>
+          <TabsTrigger value="marks" className="flex items-center gap-2">
+            <ClipboardEdit className="h-4 w-4" />
+            <span className="hidden sm:inline">Marks</span>
+          </TabsTrigger>
+          <TabsTrigger value="report-cards" className="flex items-center gap-2">
+            <FileCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Report Cards</span>
           </TabsTrigger>
           <TabsTrigger value="assignments" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
