@@ -149,10 +149,6 @@ const AdminDashboard = () => {
             <Image className="h-4 w-4" />
             <span className="hidden sm:inline">Gallery</span>
           </TabsTrigger>
-          <TabsTrigger value="attendance" className="flex items-center gap-2">
-            <ClipboardCheck className="h-4 w-4" />
-            <span className="hidden sm:inline">Attendance</span>
-          </TabsTrigger>
           <TabsTrigger value="terms" className="flex items-center gap-2">
             <CalendarRange className="h-4 w-4" />
             <span className="hidden sm:inline">Terms</span>
