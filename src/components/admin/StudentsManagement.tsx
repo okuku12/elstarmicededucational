@@ -303,6 +303,7 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -313,14 +314,14 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
                 <TableHead>Name</TableHead>
                 <TableHead>Class</TableHead>
                 <TableHead>Parent</TableHead>
-                <TableHead>Actions</TableHead>
+                {!readOnly && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {students.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    No students found. Click "Add Student" to add one.
+                  <TableCell colSpan={readOnly ? 4 : 5} className="text-center text-muted-foreground py-8">
+                    No students found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -330,6 +331,7 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
                     <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
                     <TableCell>{classes.find((c) => c.id === student.class_id)?.name || "Not assigned"}</TableCell>
                     <TableCell>{student.parent_name || "N/A"}</TableCell>
+                    {!readOnly && (
                     <TableCell>
                       <div className="flex gap-2">
                         <Dialog open={isDialogOpen && editingStudent?.id === student.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingStudent(null); }}>
@@ -403,6 +405,7 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
                         </Button>
                       </div>
                     </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
