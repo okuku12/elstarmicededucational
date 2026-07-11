@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck, Mail, LayoutDashboard, DollarSign } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Image, FileText, UserCog, Home, Book, Megaphone, Calendar, User, Library, Link2, ShieldCheck, ClipboardCheck, Mail, LayoutDashboard, DollarSign, CalendarRange } from "lucide-react";
+import TermsManagement from "@/components/admin/TermsManagement";
 import FeesManagement from "@/components/admin/FeesManagement";
 import AdminOverview from "@/components/admin/AdminOverview";
 import StudentsManagement from "@/components/admin/StudentsManagement";
@@ -21,7 +22,7 @@ import PrincipalManagement from "@/components/admin/PrincipalManagement";
 import LibraryManagement from "@/components/admin/LibraryManagement";
 import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement";
 import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
-import AttendanceManagement from "@/components/admin/AttendanceManagement";
+
 import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
 import ContactSubmissionsViewer from "@/components/admin/ContactSubmissionsViewer";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -148,9 +149,9 @@ const AdminDashboard = () => {
             <Image className="h-4 w-4" />
             <span className="hidden sm:inline">Gallery</span>
           </TabsTrigger>
-          <TabsTrigger value="attendance" className="flex items-center gap-2">
-            <ClipboardCheck className="h-4 w-4" />
-            <span className="hidden sm:inline">Attendance</span>
+          <TabsTrigger value="terms" className="flex items-center gap-2">
+            <CalendarRange className="h-4 w-4" />
+            <span className="hidden sm:inline">Terms</span>
           </TabsTrigger>
           <TabsTrigger value="fees" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
@@ -226,8 +227,8 @@ const AdminDashboard = () => {
           <GalleryManagement />
         </TabsContent>
 
-        <TabsContent value="attendance">
-          <AttendanceManagement />
+        <TabsContent value="terms">
+          <TermsManagement />
         </TabsContent>
 
         <TabsContent value="fees">

@@ -39,9 +39,19 @@ interface AttendanceState {
   existingId?: string;
 }
 
+interface TermRow {
+  id: string;
+  name: string;
+  academic_year: string;
+  start_date: string;
+  end_date: string;
+}
+
 const AttendanceManagement = () => {
   const { user } = useAuth();
   const [classes, setClasses] = useState<ClassRow[]>([]);
+  const [terms, setTerms] = useState<TermRow[]>([]);
+  const [termId, setTermId] = useState<string>("");
   const [classId, setClassId] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<StudentRow[]>([]);
@@ -63,7 +73,16 @@ const AttendanceManagement = () => {
       }
       setClasses(data ?? []);
     })();
+    (async () => {
+      const { data } = await supabase
+        .from("academic_terms")
+        .select("*")
+        .order("start_date", { ascending: false });
+      setTerms(data ?? []);
+    })();
   }, []);
+
+  const activeTerm = terms.find((t) => t.id === termId);
 
   useEffect(() => {
     if (!classId) {
@@ -150,6 +169,12 @@ const AttendanceManagement = () => {
 
   const handleSave = async () => {
     if (!user || !classId || students.length === 0) return;
+    if (!termId) return toast.error("Select a term first");
+    const day = date.getDay(); // 0=Sun, 6=Sat
+    if (day === 0 || day === 6) return toast.error("Attendance can only be marked Monday–Friday");
+    if (activeTerm && (dateStr < activeTerm.start_date || dateStr > activeTerm.end_date)) {
+      return toast.error("Date is outside the selected term");
+    }
     setSaving(true);
     try {
       const rows = students.map((s) => ({
@@ -159,6 +184,7 @@ const AttendanceManagement = () => {
         status: records[s.id]?.status ?? "present",
         remarks: records[s.id]?.remarks?.trim() || null,
         marked_by: user.id,
+        term_id: termId,
       }));
 
       const { error } = await supabase
@@ -194,11 +220,24 @@ const AttendanceManagement = () => {
       <CardHeader>
         <CardTitle>Attendance</CardTitle>
         <CardDescription>
-          Mark daily attendance per class. One record per student per day — re-saving updates existing entries.
+          Mark daily attendance per class within an active term. Weekdays only (Mon–Fri).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="space-y-2">
+            <Label>Term</Label>
+            <Select value={termId} onValueChange={setTermId}>
+              <SelectTrigger><SelectValue placeholder="Select a term" /></SelectTrigger>
+              <SelectContent>
+                {terms.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">No terms yet — ask admin to add.</div>
+                ) : terms.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name} ({t.academic_year})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
@@ -232,7 +271,16 @@ const AttendanceManagement = () => {
                   mode="single"
                   selected={date}
                   onSelect={(d) => d && setDate(d)}
-                  disabled={(d) => d > new Date()}
+                  disabled={(d) => {
+                    if (d > new Date()) return true;
+                    const day = d.getDay();
+                    if (day === 0 || day === 6) return true;
+                    if (activeTerm) {
+                      const ds = format(d, "yyyy-MM-dd");
+                      if (ds < activeTerm.start_date || ds > activeTerm.end_date) return true;
+                    }
+                    return false;
+                  }}
                   initialFocus
                 />
               </PopoverContent>

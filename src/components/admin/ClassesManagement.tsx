@@ -18,11 +18,14 @@ interface Class {
   academic_year: string;
 }
 
-const ClassesManagement = () => {
+interface ClassesManagementProps { readOnly?: boolean }
+
+const ClassesManagement = ({ readOnly = false }: ClassesManagementProps) => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
   const fetchClasses = async () => {
     try {
@@ -109,7 +112,8 @@ const ClassesManagement = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Classes Management</CardTitle>
+        <CardTitle>Classes {readOnly ? "" : "Management"}</CardTitle>
+        {!readOnly && (
         <Dialog open={isDialogOpen && !editingClass} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingClass(null); }}>
           <DialogTrigger asChild>
             <Button onClick={() => { setEditingClass(null); setIsDialogOpen(true); }}>
@@ -147,6 +151,7 @@ const ClassesManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -158,7 +163,7 @@ const ClassesManagement = () => {
                 <TableHead>Grade Level</TableHead>
                 <TableHead>Section</TableHead>
                 <TableHead>Academic Year</TableHead>
-                <TableHead>Actions</TableHead>
+                {!readOnly && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -169,6 +174,7 @@ const ClassesManagement = () => {
                   <TableCell>{cls.grade_level}</TableCell>
                   <TableCell>{cls.section || "N/A"}</TableCell>
                   <TableCell>{cls.academic_year}</TableCell>
+                  {!readOnly && (
                   <TableCell>
                     <div className="flex gap-2">
                       <Dialog open={isDialogOpen && editingClass?.id === cls.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingClass(null); }}>
@@ -212,6 +218,7 @@ const ClassesManagement = () => {
                       </Button>
                     </div>
                   </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

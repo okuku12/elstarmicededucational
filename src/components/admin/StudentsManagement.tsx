@@ -37,7 +37,9 @@ interface Class {
   section: string | null;
 }
 
-const StudentsManagement = () => {
+interface StudentsManagementProps { readOnly?: boolean }
+
+const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -193,7 +195,8 @@ const StudentsManagement = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Students Management</CardTitle>
+        <CardTitle>Students {readOnly ? "" : "Management"}</CardTitle>
+        {!readOnly && (
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -300,6 +303,7 @@ const StudentsManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -310,14 +314,14 @@ const StudentsManagement = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Class</TableHead>
                 <TableHead>Parent</TableHead>
-                <TableHead>Actions</TableHead>
+                {!readOnly && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {students.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    No students found. Click "Add Student" to add one.
+                  <TableCell colSpan={readOnly ? 4 : 5} className="text-center text-muted-foreground py-8">
+                    No students found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -327,6 +331,7 @@ const StudentsManagement = () => {
                     <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
                     <TableCell>{classes.find((c) => c.id === student.class_id)?.name || "Not assigned"}</TableCell>
                     <TableCell>{student.parent_name || "N/A"}</TableCell>
+                    {!readOnly && (
                     <TableCell>
                       <div className="flex gap-2">
                         <Dialog open={isDialogOpen && editingStudent?.id === student.id} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingStudent(null); }}>
@@ -400,6 +405,7 @@ const StudentsManagement = () => {
                         </Button>
                       </div>
                     </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
