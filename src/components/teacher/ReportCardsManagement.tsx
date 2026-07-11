@@ -191,7 +191,7 @@ const ReportCardsManagement = () => {
                         <div>
                           <input id={`f-${s.id}`} type="file" accept="application/pdf" className="hidden"
                             onChange={e => { const f = e.target.files?.[0]; if (f) uploadPdf(s, f); e.target.value = ""; }} />
-                          <Button size="sm" variant="outline" disabled={uploading === s.id}
+                          <Button size="sm" variant="outline" disabled={uploading === s.id || !termEnded}
                             onClick={() => document.getElementById(`f-${s.id}`)?.click()}>
                             <Upload className="h-3 w-3 mr-1" />{uploading === s.id ? "Uploading..." : (r?.pdf_path ? "Replace" : "Upload")}
                           </Button>
