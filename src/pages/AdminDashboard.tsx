@@ -22,7 +22,7 @@ import PrincipalManagement from "@/components/admin/PrincipalManagement";
 import LibraryManagement from "@/components/admin/LibraryManagement";
 import ClassSubjectsManagement from "@/components/admin/ClassSubjectsManagement";
 import AuditLogsViewer from "@/components/admin/AuditLogsViewer";
-import AttendanceManagement from "@/components/admin/AttendanceManagement";
+
 import ImportantDatesManagement from "@/components/admin/ImportantDatesManagement";
 import ContactSubmissionsViewer from "@/components/admin/ContactSubmissionsViewer";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -227,8 +227,8 @@ const AdminDashboard = () => {
           <GalleryManagement />
         </TabsContent>
 
-        <TabsContent value="attendance">
-          <AttendanceManagement />
+        <TabsContent value="terms">
+          <TermsManagement />
         </TabsContent>
 
         <TabsContent value="fees">
