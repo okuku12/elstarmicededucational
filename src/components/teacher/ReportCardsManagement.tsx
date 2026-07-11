@@ -13,6 +13,7 @@ import { FileText, Upload, Download, Trash2 } from "lucide-react";
 
 interface ClassRow { id: string; name: string; }
 interface Student { id: string; student_id: string; full_name: string; }
+interface TermRow { id: string; name: string; academic_year: string; start_date: string; end_date: string; }
 interface Report {
   id: string; student_id: string; term: string; academic_year: string;
   pdf_path: string | null; remarks: string | null; updated_at: string;
@@ -21,13 +22,19 @@ interface Report {
 const ReportCardsManagement = () => {
   const { user } = useAuth();
   const [classes, setClasses] = useState<ClassRow[]>([]);
+  const [terms, setTerms] = useState<TermRow[]>([]);
+  const [termId, setTermId] = useState<string>("");
   const [classId, setClassId] = useState<string>("");
-  const [term, setTerm] = useState("Term 1");
-  const [year, setYear] = useState(String(new Date().getFullYear()));
   const [students, setStudents] = useState<Student[]>([]);
   const [reports, setReports] = useState<Record<string, Report | undefined>>({});
   const [remarks, setRemarks] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<string | null>(null);
+
+  const activeTerm = terms.find((t) => t.id === termId);
+  const term = activeTerm?.name ?? "";
+  const year = activeTerm?.academic_year ?? "";
+  const today = new Date().toISOString().slice(0, 10);
+  const termEnded = activeTerm ? today >= activeTerm.end_date : false;
 
   useEffect(() => {
     const load = async () => {
@@ -39,6 +46,11 @@ const ReportCardsManagement = () => {
       if (cls && cls.length && !classId) setClassId(cls[0].id);
     };
     load();
+    (async () => {
+      const { data } = await supabase.from("academic_terms").select("*").order("start_date", { ascending: false });
+      setTerms(data ?? []);
+      if (data && data.length && !termId) setTermId(data[0].id);
+    })();
   }, [user]);
 
   const refresh = async () => {
