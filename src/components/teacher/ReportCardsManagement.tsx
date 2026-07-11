@@ -71,7 +71,7 @@ const ReportCardsManagement = () => {
     setRemarks(rem);
   };
 
-  useEffect(() => { refresh(); }, [classId, term, year]);
+  useEffect(() => { if (term && year) refresh(); }, [classId, term, year]);
 
   const upsertRemarks = async (studentId: string) => {
     const existing = reports[studentId];
