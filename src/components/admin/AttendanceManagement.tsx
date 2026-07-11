@@ -73,7 +73,16 @@ const AttendanceManagement = () => {
       }
       setClasses(data ?? []);
     })();
+    (async () => {
+      const { data } = await supabase
+        .from("academic_terms")
+        .select("*")
+        .order("start_date", { ascending: false });
+      setTerms(data ?? []);
+    })();
   }, []);
+
+  const activeTerm = terms.find((t) => t.id === termId);
 
   useEffect(() => {
     if (!classId) {
