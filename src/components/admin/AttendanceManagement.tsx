@@ -224,7 +224,20 @@ const AttendanceManagement = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="space-y-2">
+            <Label>Term</Label>
+            <Select value={termId} onValueChange={setTermId}>
+              <SelectTrigger><SelectValue placeholder="Select a term" /></SelectTrigger>
+              <SelectContent>
+                {terms.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">No terms yet — ask admin to add.</div>
+                ) : terms.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name} ({t.academic_year})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
@@ -258,7 +271,16 @@ const AttendanceManagement = () => {
                   mode="single"
                   selected={date}
                   onSelect={(d) => d && setDate(d)}
-                  disabled={(d) => d > new Date()}
+                  disabled={(d) => {
+                    if (d > new Date()) return true;
+                    const day = d.getDay();
+                    if (day === 0 || day === 6) return true;
+                    if (activeTerm) {
+                      const ds = format(d, "yyyy-MM-dd");
+                      if (ds < activeTerm.start_date || ds > activeTerm.end_date) return true;
+                    }
+                    return false;
+                  }}
                   initialFocus
                 />
               </PopoverContent>
