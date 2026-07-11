@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_terms: {
+        Row: {
+          academic_year: string
+          created_at: string
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          end_date: string
+          id?: string
+          name: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          name?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admission_applications: {
         Row: {
           additional_info: string | null
@@ -209,6 +239,7 @@ export type Database = {
           remarks: string | null
           status: string
           student_id: string
+          term_id: string | null
         }
         Insert: {
           class_id: string
@@ -219,6 +250,7 @@ export type Database = {
           remarks?: string | null
           status: string
           student_id: string
+          term_id?: string | null
         }
         Update: {
           class_id?: string
@@ -229,6 +261,7 @@ export type Database = {
           remarks?: string | null
           status?: string
           student_id?: string
+          term_id?: string | null
         }
         Relationships: [
           {
@@ -243,6 +276,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "academic_terms"
             referencedColumns: ["id"]
           },
         ]
@@ -847,6 +887,7 @@ export type Database = {
           remarks: string | null
           student_id: string
           term: string
+          term_id: string | null
           updated_at: string
           uploaded_by: string | null
         }
@@ -859,6 +900,7 @@ export type Database = {
           remarks?: string | null
           student_id: string
           term: string
+          term_id?: string | null
           updated_at?: string
           uploaded_by?: string | null
         }
@@ -871,6 +913,7 @@ export type Database = {
           remarks?: string | null
           student_id?: string
           term?: string
+          term_id?: string | null
           updated_at?: string
           uploaded_by?: string | null
         }
@@ -887,6 +930,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_cards_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "academic_terms"
             referencedColumns: ["id"]
           },
         ]
