@@ -220,7 +220,7 @@ const AttendanceManagement = () => {
       <CardHeader>
         <CardTitle>Attendance</CardTitle>
         <CardDescription>
-          Mark daily attendance per class. One record per student per day — re-saving updates existing entries.
+          Mark daily attendance per class within an active term. Weekdays only (Mon–Fri).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
