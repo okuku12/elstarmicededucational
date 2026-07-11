@@ -37,7 +37,9 @@ interface Class {
   section: string | null;
 }
 
-const StudentsManagement = () => {
+interface StudentsManagementProps { readOnly?: boolean }
+
+const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -193,7 +195,8 @@ const StudentsManagement = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Students Management</CardTitle>
+        <CardTitle>Students {readOnly ? "" : "Management"}</CardTitle>
+        {!readOnly && (
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
