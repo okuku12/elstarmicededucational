@@ -169,6 +169,12 @@ const AttendanceManagement = () => {
 
   const handleSave = async () => {
     if (!user || !classId || students.length === 0) return;
+    if (!termId) return toast.error("Select a term first");
+    const day = date.getDay(); // 0=Sun, 6=Sat
+    if (day === 0 || day === 6) return toast.error("Attendance can only be marked Monday–Friday");
+    if (activeTerm && (dateStr < activeTerm.start_date || dateStr > activeTerm.end_date)) {
+      return toast.error("Date is outside the selected term");
+    }
     setSaving(true);
     try {
       const rows = students.map((s) => ({
@@ -178,6 +184,7 @@ const AttendanceManagement = () => {
         status: records[s.id]?.status ?? "present",
         remarks: records[s.id]?.remarks?.trim() || null,
         marked_by: user.id,
+        term_id: termId,
       }));
 
       const { error } = await supabase
