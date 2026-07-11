@@ -39,9 +39,19 @@ interface AttendanceState {
   existingId?: string;
 }
 
+interface TermRow {
+  id: string;
+  name: string;
+  academic_year: string;
+  start_date: string;
+  end_date: string;
+}
+
 const AttendanceManagement = () => {
   const { user } = useAuth();
   const [classes, setClasses] = useState<ClassRow[]>([]);
+  const [terms, setTerms] = useState<TermRow[]>([]);
+  const [termId, setTermId] = useState<string>("");
   const [classId, setClassId] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<StudentRow[]>([]);
