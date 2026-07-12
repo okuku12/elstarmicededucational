@@ -56,6 +56,29 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
 
   const fetchData = async () => {
     try {
+      // If readOnly (teacher view), figure out which classes this teacher is assigned to
+      let allowed: Set<string> | null = null;
+      if (readOnly && user) {
+        const { data: teacherRow } = await supabase
+          .from("teachers")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (teacherRow) {
+          const [classTeacherRes, subjectRes] = await Promise.all([
+            supabase.from("classes").select("id").eq("class_teacher_id", teacherRow.id),
+            supabase.from("class_subjects").select("class_id").eq("teacher_id", teacherRow.id),
+          ]);
+          const ids = new Set<string>();
+          (classTeacherRes.data ?? []).forEach((c) => ids.add(c.id));
+          (subjectRes.data ?? []).forEach((c) => ids.add(c.class_id));
+          allowed = ids;
+        } else {
+          allowed = new Set();
+        }
+      }
+      setAllowedClassIds(allowed);
+
       const [studentsRes, classesRes, profilesRes] = await Promise.all([
         supabase.from("students").select("*").order("created_at", { ascending: false }),
         supabase.from("classes").select("*").order("grade_level", { ascending: true }),
@@ -66,10 +89,7 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
       if (classesRes.error) throw classesRes.error;
       if (profilesRes.error) throw profilesRes.error;
 
-      // Map profiles by id for quick lookup
       const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p]) || []);
-      
-      // Join students with profiles manually
       const studentsWithProfiles = (studentsRes.data || []).map(student => ({
         ...student,
         profile: profilesMap.get(student.user_id)
