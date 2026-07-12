@@ -345,7 +345,29 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
         </Dialog>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="w-full sm:w-64">
+            <Label className="text-xs">Filter by class</Label>
+            <Select value={classFilter} onValueChange={setClassFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All classes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All classes</SelectItem>
+                {visibleClasses.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}{c.section ? ` - ${c.section}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Showing {visibleStudents.length} student{visibleStudents.length === 1 ? "" : "s"}
+            {readOnly ? " assigned to you" : ""}.
+          </p>
+        </div>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -358,14 +380,14 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.length === 0 ? (
+              {visibleStudents.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={readOnly ? 4 : 5} className="text-center text-muted-foreground py-8">
                     No students found.
                   </TableCell>
                 </TableRow>
               ) : (
-                students.map((student) => (
+                visibleStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-mono font-medium">{student.student_id}</TableCell>
                     <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
