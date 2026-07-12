@@ -87,10 +87,6 @@ const TeacherDashboard = () => {
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Classes</span>
           </TabsTrigger>
-          <TabsTrigger value="students" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Students</span>
-          </TabsTrigger>
           <TabsTrigger value="marks" className="flex items-center gap-2">
             <ClipboardEdit className="h-4 w-4" />
             <span className="hidden sm:inline">Marks</span>
