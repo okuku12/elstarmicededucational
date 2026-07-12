@@ -41,6 +41,7 @@ interface Class {
 interface StudentsManagementProps { readOnly?: boolean }
 
 const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -50,6 +51,8 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [userSearchQuery, setUserSearchQuery] = useState<string>("");
+  const [classFilter, setClassFilter] = useState<string>("all");
+  const [allowedClassIds, setAllowedClassIds] = useState<Set<string> | null>(null);
 
   const fetchData = async () => {
     try {
