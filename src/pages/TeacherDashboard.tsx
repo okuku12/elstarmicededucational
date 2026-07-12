@@ -4,10 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, FileText, Calendar, LayoutDashboard, ClipboardEdit, FileCheck } from "lucide-react";
+import { BookOpen, FileText, Calendar, LayoutDashboard, ClipboardEdit, FileCheck } from "lucide-react";
 import TeacherOverview from "@/components/teacher/TeacherOverview";
 import ClassesManagement from "@/components/admin/ClassesManagement";
-import StudentsManagement from "@/components/admin/StudentsManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import SubmissionsManagement from "@/components/assignments/SubmissionsManagement";
@@ -87,10 +86,6 @@ const TeacherDashboard = () => {
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Classes</span>
           </TabsTrigger>
-          <TabsTrigger value="students" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Students</span>
-          </TabsTrigger>
           <TabsTrigger value="marks" className="flex items-center gap-2">
             <ClipboardEdit className="h-4 w-4" />
             <span className="hidden sm:inline">Marks</span>
@@ -115,10 +110,6 @@ const TeacherDashboard = () => {
 
         <TabsContent value="classes">
           <ClassesManagement readOnly />
-        </TabsContent>
-
-        <TabsContent value="students">
-          <StudentsManagement readOnly />
         </TabsContent>
 
         <TabsContent value="marks">
