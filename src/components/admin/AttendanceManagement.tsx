@@ -234,7 +234,7 @@ const AttendanceManagement = () => {
       <CardHeader>
         <CardTitle>Attendance</CardTitle>
         <CardDescription>
-          Mark daily attendance per class within an active term. Weekdays only (Mon–Fri).
+          Mark daily attendance for classes you are assigned to as the class teacher. Weekdays only (Mon–Fri).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
