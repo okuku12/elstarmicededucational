@@ -113,10 +113,6 @@ const TeacherDashboard = () => {
           <ClassesManagement readOnly />
         </TabsContent>
 
-        <TabsContent value="students">
-          <StudentsManagement readOnly />
-        </TabsContent>
-
         <TabsContent value="marks">
           <MarksEntry />
         </TabsContent>
