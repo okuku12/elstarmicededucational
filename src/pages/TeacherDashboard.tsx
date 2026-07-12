@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BookOpen, FileText, Calendar, LayoutDashboard, ClipboardEdit, FileCheck } from "lucide-react";
 import TeacherOverview from "@/components/teacher/TeacherOverview";
 import ClassesManagement from "@/components/admin/ClassesManagement";
-import StudentsManagement from "@/components/admin/StudentsManagement";
 import AssignmentsManagement from "@/components/admin/AssignmentsManagement";
 import AssignmentsList from "@/components/assignments/AssignmentsList";
 import SubmissionsManagement from "@/components/assignments/SubmissionsManagement";
