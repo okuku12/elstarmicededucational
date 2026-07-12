@@ -62,10 +62,24 @@ const AttendanceManagement = () => {
   const dateStr = useMemo(() => format(date, "yyyy-MM-dd"), [date]);
 
   useEffect(() => {
+    if (!user) return;
     (async () => {
+      // Only classes where the current user is the assigned class teacher
+      const { data: teacherRow } = await supabase
+        .from("teachers")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!teacherRow) {
+        setClasses([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("classes")
         .select("id, name, section, academic_year")
+        .eq("class_teacher_id", teacherRow.id)
         .order("grade_level");
       if (error) {
         toast.error("Failed to load classes");
@@ -80,7 +94,7 @@ const AttendanceManagement = () => {
         .order("start_date", { ascending: false });
       setTerms(data ?? []);
     })();
-  }, []);
+  }, [user]);
 
   const activeTerm = terms.find((t) => t.id === termId);
 
