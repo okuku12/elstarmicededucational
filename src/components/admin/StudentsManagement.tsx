@@ -118,7 +118,23 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [readOnly, user?.id]);
+
+  const visibleClasses = useMemo(
+    () => (allowedClassIds ? classes.filter((c) => allowedClassIds.has(c.id)) : classes),
+    [classes, allowedClassIds]
+  );
+
+  const visibleStudents = useMemo(() => {
+    let list = students;
+    if (allowedClassIds) {
+      list = list.filter((s) => s.class_id && allowedClassIds.has(s.class_id));
+    }
+    if (classFilter !== "all") {
+      list = list.filter((s) => s.class_id === classFilter);
+    }
+    return list;
+  }, [students, allowedClassIds, classFilter]);
 
   // Get profiles that are not already students
   const getAvailableProfiles = () => {
