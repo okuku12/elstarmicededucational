@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ interface Class {
 interface StudentsManagementProps { readOnly?: boolean }
 
 const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -49,9 +51,34 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [userSearchQuery, setUserSearchQuery] = useState<string>("");
+  const [classFilter, setClassFilter] = useState<string>("all");
+  const [allowedClassIds, setAllowedClassIds] = useState<Set<string> | null>(null);
 
   const fetchData = async () => {
     try {
+      // If readOnly (teacher view), figure out which classes this teacher is assigned to
+      let allowed: Set<string> | null = null;
+      if (readOnly && user) {
+        const { data: teacherRow } = await supabase
+          .from("teachers")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (teacherRow) {
+          const [classTeacherRes, subjectRes] = await Promise.all([
+            supabase.from("classes").select("id").eq("class_teacher_id", teacherRow.id),
+            supabase.from("class_subjects").select("class_id").eq("teacher_id", teacherRow.id),
+          ]);
+          const ids = new Set<string>();
+          (classTeacherRes.data ?? []).forEach((c) => ids.add(c.id));
+          (subjectRes.data ?? []).forEach((c) => ids.add(c.class_id));
+          allowed = ids;
+        } else {
+          allowed = new Set();
+        }
+      }
+      setAllowedClassIds(allowed);
+
       const [studentsRes, classesRes, profilesRes] = await Promise.all([
         supabase.from("students").select("*").order("created_at", { ascending: false }),
         supabase.from("classes").select("*").order("grade_level", { ascending: true }),
@@ -62,10 +89,7 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
       if (classesRes.error) throw classesRes.error;
       if (profilesRes.error) throw profilesRes.error;
 
-      // Map profiles by id for quick lookup
       const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p]) || []);
-      
-      // Join students with profiles manually
       const studentsWithProfiles = (studentsRes.data || []).map(student => ({
         ...student,
         profile: profilesMap.get(student.user_id)
@@ -94,7 +118,23 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [readOnly, user?.id]);
+
+  const visibleClasses = useMemo(
+    () => (allowedClassIds ? classes.filter((c) => allowedClassIds.has(c.id)) : classes),
+    [classes, allowedClassIds]
+  );
+
+  const visibleStudents = useMemo(() => {
+    let list = students;
+    if (allowedClassIds) {
+      list = list.filter((s) => s.class_id && allowedClassIds.has(s.class_id));
+    }
+    if (classFilter !== "all") {
+      list = list.filter((s) => s.class_id === classFilter);
+    }
+    return list;
+  }, [students, allowedClassIds, classFilter]);
 
   // Get profiles that are not already students
   const getAvailableProfiles = () => {
@@ -305,7 +345,29 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
         </Dialog>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="w-full sm:w-64">
+            <Label className="text-xs">Filter by class</Label>
+            <Select value={classFilter} onValueChange={setClassFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All classes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All classes</SelectItem>
+                {visibleClasses.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}{c.section ? ` - ${c.section}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Showing {visibleStudents.length} student{visibleStudents.length === 1 ? "" : "s"}
+            {readOnly ? " assigned to you" : ""}.
+          </p>
+        </div>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -318,14 +380,14 @@ const StudentsManagement = ({ readOnly = false }: StudentsManagementProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.length === 0 ? (
+              {visibleStudents.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={readOnly ? 4 : 5} className="text-center text-muted-foreground py-8">
                     No students found.
                   </TableCell>
                 </TableRow>
               ) : (
-                students.map((student) => (
+                visibleStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-mono font-medium">{student.student_id}</TableCell>
                     <TableCell>{student.profile?.full_name || "N/A"}</TableCell>
